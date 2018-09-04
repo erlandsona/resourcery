@@ -1,0 +1,43 @@
+.stack-work/
+dist
+dist-*
+cabal-dev
+*.o
+*.hi
+*.chi
+*.chs.h
+*.dyn_o
+*.dyn_hi
+.hpc
+.hsenv
+.cabal-sandbox/
+cabal.sandbox.config
+*.prof
+*.aux
+*.hp
+*.eventlog
+.stack-work/
+cabal.project.local
+.HTF/
+
+# elm-package generated files
+elm-stuff/
+# elm-repl generated files
+repl-temp-*
+_main.js
+node_modules
+runner.sh
+public/
+npm-debug.log
+Session.vim
+# app/Client/Generated.elm
+app/Server.elm
+tags
+tags*
+*.cabal
+ci-access-key.json
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
