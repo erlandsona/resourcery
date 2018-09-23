@@ -1,0 +1,122 @@
+name: resourcery
+version: '0.0.1'
+category: Web
+author: Austin Erlandson
+maintainer: austin@erlandson.com
+copyright: 2018 Austin Erlandson
+license: MIT
+github: erlandsona/resourcery
+# extra-source-files:
+#   - ../README.md
+
+dependencies:
+  - base >=4.7 && <5
+
+  - aeson
+  # - bytestring
+  # - elm-export
+  # - elm-export-persistent
+  # - filepath
+  # - hilt
+  # - monad-logger
+  # - mtl
+  # - http-types
+  # - persistent
+  # - persistent-postgresql
+  # - persistent-template
+  # - safe
+  # - servant-docs
+  # - servant-elm
+  # - servant-foreign
+  # - servant-generic
+  - servant-server
+  # - template-haskell
+  - text
+  # - time
+  # - transformers
+  # - turtle
+  - wai
+  # - wai-app-static
+  # - wai-cors
+  # - wai-extra
+  - warp
+  # - yaml
+
+default-extensions:
+  - OverloadedStrings
+
+library:
+  source-dirs:
+    - src
+  when:
+    - condition: (flag(dev)) || (flag(library-only))
+      then:
+        ghc-options:
+        - -Wall
+        - -Werror
+        - -fwarn-tabs
+        - -ddump-deriv
+        - -ddump-splices
+        - -fno-warn-orphans
+        - -O0
+        cpp-options: -DDEVELOPMENT
+      else:
+        ghc-options:
+        - -Wall
+        - -Werror
+        - -fwarn-tabs
+        - -O2
+
+executables:
+  resourcery:
+    main: exe/Server.hs
+    ghc-options:
+      - -Wall
+      - -Werror
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - resourcery
+    when:
+      - condition: flag(library-only)
+        buildable: false
+
+  # docs:
+  #   <<: *defaults
+  #   main: exe/Docs.hs
+  #   source-dirs: exec
+
+  # elmify:
+  #   <<: *defaults
+  #   main: exe/Elmify.hs
+
+  # seed:
+  #   <<: *defaults
+  #   main: db/Seeds.hs
+
+tests:
+  resourcery-test:
+    main: test/Spec.hs
+    ghc-options:
+      - -Wall
+      - -Werror
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - resourcery
+      - hspec
+      - text
+      - neat-interpolation
+
+# Define flags used by "yesod devel" to make compilation faster
+flags:
+  library-only:
+    description: Build for use with "yesod devel"
+    manual: false
+    default: false
+  dev:
+    description: Turn on development settings, like auto-reload templates.
+    manual: false
+    default: false

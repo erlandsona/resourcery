@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  nginx:
+    image: jwilder/nginx-proxy
+    ports:
+      - '80:80'
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+
+
+  db:
+    environment:
+      - POSTGRES_DB=resourcery_development
+    # For linking services.
+    # expose:
+    #   - '5432'
+    image: postgres
+    # For exposing to host machine.
+    ports:
+      - '9876:5432'
+
