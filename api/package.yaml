@@ -12,7 +12,7 @@ github: erlandsona/resourcery
 dependencies:
   - base >=4.7 && <5
 
-  - aeson
+  # Utility Libs
   # - bytestring
   # - elm-export
   # - elm-export-persistent
@@ -21,25 +21,38 @@ dependencies:
   # - monad-logger
   # - mtl
   # - http-types
-  # - persistent
-  # - persistent-postgresql
-  # - persistent-template
   # - safe
+  # - template-haskell
+  # - require # Add if needed by project modules.
+  - text
+  # - time
+  # - transformers
+  # - turtle
+
+  # Serialization / DeSerialization
+  - aeson
+
+  # DB
+  - beam-core
+  - beam-postgres
+  # - beam-migrate # Add when ready
+  - postgresql-simple
+
+  # Web API Framework
   # - servant-docs
   # - servant-elm
   # - servant-foreign
   # - servant-generic
   - servant-server
-  # - template-haskell
-  - text
-  # - time
-  # - transformers
-  # - turtle
+
+  # Haskell Web Server like Puma & Rack from Ruby.
   - wai
   # - wai-app-static
   # - wai-cors
   # - wai-extra
   - warp
+
+
   # - yaml
 
 default-extensions:
@@ -52,6 +65,7 @@ library:
     - condition: (flag(dev)) || (flag(library-only))
       then:
         ghc-options:
+        # - -F -pgmF requirepp
         - -Wall
         - -Werror
         - -fwarn-tabs
@@ -62,6 +76,7 @@ library:
         cpp-options: -DDEVELOPMENT
       else:
         ghc-options:
+        # - -F -pgmF requirepp
         - -Wall
         - -Werror
         - -fwarn-tabs
