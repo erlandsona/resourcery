@@ -28,6 +28,7 @@ dependencies:
   # - time
   # - transformers
   # - turtle
+  - yaml
 
   # Serialization / DeSerialization
   - aeson
@@ -37,6 +38,7 @@ dependencies:
   - beam-postgres
   # - beam-migrate # Add when ready
   - postgresql-simple
+  - resource-pool
 
   # Web API Framework
   # - servant-docs
@@ -53,14 +55,12 @@ dependencies:
   - warp
 
 
-  # - yaml
-
 default-extensions:
   - OverloadedStrings
 
 library:
   source-dirs:
-    - src
+    - library
   when:
     - condition: (flag(dev)) || (flag(library-only))
       then:
@@ -84,7 +84,8 @@ library:
 
 executables:
   resourcery:
-    main: exe/Server.hs
+    main: Server.hs
+    source-dirs: executables
     ghc-options:
       - -Wall
       - -Werror
