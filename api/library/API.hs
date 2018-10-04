@@ -1,31 +1,42 @@
-{-# LANGUAGE DataKinds             #-}
-{-# LANGUAGE DeriveAnyClass        #-}
-{-# LANGUAGE DeriveGeneric         #-}
-{-# LANGUAGE GADTs                 #-}
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE RecordWildCards       #-}
-{-# LANGUAGE StandaloneDeriving    #-}
-{-# LANGUAGE TemplateHaskell       #-}
-{-# LANGUAGE TypeApplications      #-}
-{-# LANGUAGE TypeFamilies          #-}
-{-# LANGUAGE TypeOperators         #-}
-{-# LANGUAGE TypeSynonymInstances  #-}
+{-# LANGUAGE DataKinds                  #-}
+{-# LANGUAGE DeriveAnyClass             #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GADTs                      #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE RecordWildCards            #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE TypeApplications           #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE TypeOperators              #-}
+{-# LANGUAGE TypeSynonymInstances       #-}
 
 module API where
 
+-- Major imports exposing everything
 import Data.Aeson
-import Data.Text (Text)
 import Database.Beam
-import Database.PostgreSQL.Simple
-import GHC.Word (Word16)
--- import Database.Beam.Postgres
-import Network.Wai
-import Network.Wai.Handler.Warp
 import Servant
-import Data.Pool
+
+
+-- Minor Imports only importing certain functions
+import Control.Monad.Reader (runReaderT)
+import Data.Text (Text)
 import Data.Yaml.Config (loadYamlSettings, useEnv)
+-- import Database.Beam.Postgres
+import Network.Wai (Middleware)
+import qualified Network.Wai as Wai
+import Network.Wai.Handler.Warp (run)
+import Network.Wai.Middleware.Cors (CorsResourcePolicy(..), cors)
+import Network.Wai.Middleware.Gzip (gzip, def)
+import Network.Wai.Middleware.RequestLogger (logStdout, logStdoutDev)
+
+
+-- Local Imports
+import App
+import Config
 
 -- Database Schema
 data UserT f
@@ -69,47 +80,64 @@ resourceryDb = defaultDbSettings
 -- API Declaration
 type API = "users" :> Get '[JSON] [User]
 
-app :: Application
-app = serve api server
+nt :: Dependencies -> AppM a -> Handler a
+nt = flip runReaderT
 
--- API implimentation
-api :: Proxy API
-api = Proxy
-
-server :: Server API
-server = return []
-
-data DBConfig = DBConfig
-    { connectPort     :: Word16
-    , connectHost     :: String
-    , connectUser     :: String
-    , connectPassword :: String
-    , connectDatabase :: String
-    }
-    deriving (Generic, FromJSON)
-
-data ServerConfig = ServerConfig
-    { port :: Int
-    } deriving (Generic, FromJSON)
-
-data Config = Config
-    { serverConfig :: ServerConfig
-    , dbConfig :: DBConfig
-    } deriving (Generic, FromJSON)
+server :: Dependencies -> Application
+server deps =
+    serve api $
+        hoistServer api (nt deps) (return [] :: ServerT API AppM)
+        where
+            api = (Proxy :: Proxy API)
 
 -- Main
 main :: IO ()
 main = do
-    Config { serverConfig = ServerConfig{..}, ..} <- loadYamlSettings ["config/settings.yaml"] [] useEnv
-    pool <- makePool dbConfig
+    ServerConfig {..} <- loadYamlSettings ["config/settings.yaml"] [] useEnv
+    pool <- makePool dbConfig poolConfig
+    let logger =
+            case env of
+                Localhost -> logStdoutDev
+                Production -> logStdout
+        deps = Dependencies
+            { getPool = pool
+            , getEnvironment = env
+            }
+        middlewares = compression
+                    -- . allowCsrf
+                    . corsified
+        app = middlewares . server $ deps
 
-    run port app
+    run port . logger $ app
 
-makePool :: DBConfig -> IO (Pool Connection)
-makePool DBConfig{..} =
-    let
-        connectionTimeout = 60 -- Seconds
-        connectionsPerStripe = 10
-        stripes = 2
-    in
-        createPool (connect ConnectInfo{..}) close stripes connectionTimeout connectionsPerStripe
+type Middlewares = (Wai.Application -> Wai.Application)
+
+-- | @x-csrf-token@ allowance.
+-- The following header will be set: @Access-Control-Allow-Headers: x-csrf-token@.
+-- allowCsrf :: Middleware
+-- allowCsrf = addHeaders [("Access-Control-Allow-Headers", "x-csrf-token,authorization")]
+
+-- | CORS middleware configured with 'appCorsResourcePolicy'.
+corsified :: Middleware
+corsified = cors (const $ Just appCorsResourcePolicy)
+
+compression :: Middleware
+compression = gzip def
+
+-- | Cors resource policy to be used with 'corsified' middleware.
+--
+-- This policy will set the following:
+--
+-- * RequestHeaders: @Content-Type, Authorization, Origin@
+-- * MethodsAllowed: @OPTIONS, GET, PUT, POST@
+appCorsResourcePolicy :: CorsResourcePolicy
+appCorsResourcePolicy = CorsResourcePolicy
+    { corsOrigins        = Nothing
+    , corsMethods        = ["OPTIONS", "GET", "PUT", "POST"]
+    , corsRequestHeaders = ["Authorization", "Content-Type", "Origin"]
+    , corsExposedHeaders = Nothing
+    , corsMaxAge         = Nothing
+    , corsVaryOrigin     = False
+    , corsRequireOrigin  = False
+    , corsIgnoreFailures = False
+    }

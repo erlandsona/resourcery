@@ -18,14 +18,14 @@ dependencies:
   # - elm-export-persistent
   # - filepath
   # - hilt
-  # - monad-logger
-  # - mtl
+  - monad-logger
+  - mtl
   # - http-types
   # - safe
   # - template-haskell
   # - require # Add if needed by project modules.
   - text
-  # - time
+  - time
   # - transformers
   # - turtle
   - yaml
@@ -50,8 +50,8 @@ dependencies:
   # Haskell Web Server like Puma & Rack from Ruby.
   - wai
   # - wai-app-static
-  # - wai-cors
-  # - wai-extra
+  - wai-cors
+  - wai-extra
   - warp
 
 

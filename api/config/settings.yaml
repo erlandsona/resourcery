@@ -1,1 +1,12 @@
-port: "_env:PORT:7777"
+env: "_env:SERVER_ENV:Localhost"
+port: "_env:SERVER_PORT:7777"
+dbConfig:
+  connectPort: "_env:DB_PORT:5432"
+  connectHost: "_env:DB_HOST:localhost"
+  connectUser: "_env:DB_USER:postgres"
+  connectPassword: "_env:DB_PASS:''"
+  connectDatabase: "_env:DB_NAME:postgres"
+poolConfig:
+  connectionTimeout: "_env:POOL_CONNECTION_TIMEOUT:60"
+  connectionsPerStripe: "_env:POOL_CONNECTIONS_PER_STRIPE:10"
+  stripes: "_env:POOL_STRIPES:2"

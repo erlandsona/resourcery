@@ -10,13 +10,13 @@ services:
 
 
   db:
-    environment:
-      - POSTGRES_DB=resourcery_development
+    # environment:
+    #   - POSTGRES_DB=resourcery_dev
     # For linking services.
     # expose:
     #   - '5432'
     image: postgres
     # For exposing to host machine.
     ports:
-      - '9876:5432'
+      - '5432:5432'
 
