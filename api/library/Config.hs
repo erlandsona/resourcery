@@ -10,6 +10,7 @@ module Config where
 
 import Data.Aeson (FromJSON)
 import Data.Time.Clock (NominalDiffTime)
+import Data.Yaml.Config (loadYamlSettings, useEnv)
 import Database.Beam (Generic)
 import GHC.Word (Word16)
 
@@ -44,5 +45,8 @@ data Environment
     deriving (FromJSON, Generic)
 
 -- Utilities
+
+loadConfig :: IO ServerConfig
+loadConfig = loadYamlSettings ["config/settings.yaml"] [] useEnv
 
 type Seconds = NominalDiffTime

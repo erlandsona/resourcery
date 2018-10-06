@@ -44,7 +44,7 @@ dependencies:
   # - servant-docs
   # - servant-elm
   # - servant-foreign
-  # - servant-generic
+  - servant >= 0.14.1
   - servant-server
 
   # Haskell Web Server like Puma & Rack from Ruby.
@@ -111,20 +111,20 @@ executables:
   #   <<: *defaults
   #   main: db/Seeds.hs
 
-tests:
-  resourcery-test:
-    main: test/Spec.hs
-    ghc-options:
-      - -Wall
-      - -Werror
-      - -threaded
-      - -rtsopts
-      - -with-rtsopts=-N
-    dependencies:
-      - resourcery
-      - hspec
-      - text
-      - neat-interpolation
+# tests:
+#   resourcery-test:
+#     main: test/Spec.hs
+#     ghc-options:
+#       - -Wall
+#       - -Werror
+#       - -threaded
+#       - -rtsopts
+#       - -with-rtsopts=-N
+#     dependencies:
+#       - resourcery
+#       - hspec
+#       - text
+#       - neat-interpolation
 
 # Define flags used by "yesod devel" to make compilation faster
 flags:

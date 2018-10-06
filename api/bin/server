@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# Reload code and server on changes.
+ghcid -W -n2000 -w150 -T 'main'

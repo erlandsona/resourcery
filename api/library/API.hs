@@ -4,6 +4,7 @@
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GADTs                      #-}
+{-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE RecordWildCards            #-}
 {-# LANGUAGE StandaloneDeriving         #-}
@@ -19,16 +20,16 @@ module API where
 import Data.Aeson
 import Database.Beam
 import Servant
+import Servant.API.Generic
+import Servant.Server.Generic
 
 
 -- Minor Imports only importing certain functions
 import Control.Monad.Reader (runReaderT)
 import Data.Text (Text)
-import Data.Yaml.Config (loadYamlSettings, useEnv)
 -- import Database.Beam.Postgres
 import Network.Wai (Middleware)
 import qualified Network.Wai as Wai
-import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.Cors (CorsResourcePolicy(..), cors)
 import Network.Wai.Middleware.Gzip (gzip, def)
 import Network.Wai.Middleware.RequestLogger (logStdout, logStdoutDev)
@@ -78,39 +79,43 @@ resourceryDb = defaultDbSettings
 
 
 -- API Declaration
-type API = "users" :> Get '[JSON] [User]
+data Routes route = Routes
+    { _get :: route :- Capture "id" Int :> Get '[JSON] String
+    -- , _put :: route :- ReqBody '[JSON] Int :> Put '[JSON] Bool
+    }
+  deriving (Generic)
 
 nt :: Dependencies -> AppM a -> Handler a
 nt = flip runReaderT
 
-server :: Dependencies -> Application
-server deps =
-    serve api $
-        hoistServer api (nt deps) (return [] :: ServerT API AppM)
-        where
-            api = (Proxy :: Proxy API)
+proxy :: Proxy (ToServantApi Routes)
+proxy = genericApi (Proxy :: Proxy Routes)
 
--- Main
-main :: IO ()
-main = do
-    ServerConfig {..} <- loadYamlSettings ["config/settings.yaml"] [] useEnv
-    pool <- makePool dbConfig poolConfig
-    let logger =
-            case env of
-                Localhost -> logStdoutDev
-                Production -> logStdout
-        deps = Dependencies
-            { getPool = pool
-            , getEnvironment = env
-            }
-        middlewares = compression
-                    -- . allowCsrf
-                    . corsified
-        app = middlewares . server $ deps
+getLink :: Int -> Link
+getLink = fieldLink _get
 
-    run port . logger $ app
+record :: Routes AsServer
+record = Routes
+    { _get = return . show
+    }
+
+routesLinks :: Routes (AsLink Link)
+routesLinks = allFieldLinks
+
+app :: Application
+app =
+    genericServe record
+
+logger :: Environment -> Middleware
+logger = \case
+    Localhost -> logStdoutDev
+    Production -> logStdout
 
 type Middlewares = (Wai.Application -> Wai.Application)
+middleware :: Middlewares
+middleware = compression
+            -- . allowCsrf
+            . corsified
 
 -- | @x-csrf-token@ allowance.
 -- The following header will be set: @Access-Control-Allow-Headers: x-csrf-token@.

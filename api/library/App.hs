@@ -4,15 +4,7 @@
 
 module App where
 
--- import Control.Monad.Except (MonadError)
--- import Control.Monad.Logger (runNoLoggingT, runStdoutLoggingT)
-import Control.Monad.Reader
-    ( ReaderT
-    -- , MonadIO
-    -- , MonadReader
-    -- , asks
-    -- , liftIO
-    )
+import Control.Monad.Reader (ReaderT)
 import Data.Pool (Pool, createPool)
 import Database.PostgreSQL.Simple
     ( Connection
@@ -20,22 +12,18 @@ import Database.PostgreSQL.Simple
     , connect
     , close
     )
-import Servant
-    ( Handler(..)
-    -- , ServantErr
-    )
+import Servant (Handler(..))
 
 import Config
     ( DBConfig(..)
-    , Environment
     , PoolConfig(..)
     )
+
 
 type AppM = ReaderT Dependencies Handler
 
 data Dependencies = Dependencies
     { getPool :: ConnectionPool
-    , getEnvironment :: Environment
     }
 
 type ConnectionPool = Pool Connection
