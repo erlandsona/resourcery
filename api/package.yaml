@@ -34,9 +34,13 @@ dependencies:
   - aeson
 
   # DB
+  # Really confusing query language.
   - beam-core
   - beam-postgres
   # - beam-migrate # Add when ready
+  # - persistent
+  # - persistent-postgresql
+  # - persistent-template
   - postgresql-simple
   - resource-pool
 

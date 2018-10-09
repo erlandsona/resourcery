@@ -17,11 +17,10 @@
 module API where
 
 -- Major imports exposing everything
-import Data.Aeson
-import Database.Beam
 import Servant
 import Servant.API.Generic
 import Servant.Server.Generic
+
 
 
 -- Minor Imports only importing certain functions
@@ -30,81 +29,43 @@ import Data.Text (Text)
 -- import Database.Beam.Postgres
 import Network.Wai (Middleware)
 import qualified Network.Wai as Wai
+import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.Cors (CorsResourcePolicy(..), cors)
 import Network.Wai.Middleware.Gzip (gzip, def)
 import Network.Wai.Middleware.RequestLogger (logStdout, logStdoutDev)
 
 
 -- Local Imports
-import App
 import Config
+import Models (Account)
 
 -- Database Schema
-data UserT f
-    = User
-    { userId        :: Columnar f Int
-    , userEmail     :: Columnar f Text
-    , userFirstName :: Columnar f Text
-    , userLastName  :: Columnar f Text
-    , userPassword  :: Columnar f Text
-    } deriving (Generic, Beamable)
-
-type User = UserT Identity
-type UserId = PrimaryKey UserT Identity
-
-deriving instance ToJSON User
-deriving instance Show User
-deriving instance Eq User
-
-deriving instance ToJSON UserId
-deriving instance Show UserId
-deriving instance Eq UserId
-
-instance Table UserT where
-    data PrimaryKey UserT f
-        = UserId (Columnar f Int)
-        deriving (Generic, Beamable)
-    primaryKey = UserId . userId
-
-
-data ResourceryDb entity
-    = ResourceryDb
-    { user :: entity (TableEntity UserT)
-    } deriving Generic
-
-instance Database be ResourceryDb
-
-resourceryDb :: DatabaseSettings be ResourceryDb
-resourceryDb = defaultDbSettings
-
 
 -- API Declaration
 data Routes route = Routes
-    { _get :: route :- Capture "id" Int :> Get '[JSON] String
+    { _getAccounts :: route :- Get '[JSON] [Account]
     -- , _put :: route :- ReqBody '[JSON] Int :> Put '[JSON] Bool
     }
   deriving (Generic)
 
-nt :: Dependencies -> AppM a -> Handler a
-nt = flip runReaderT
+routes :: DBConnection a -> Routes AsServer
+routes runDB = Routes
+    { _getAccounts = getAccounts runDB
+    }
+
 
 proxy :: Proxy (ToServantApi Routes)
 proxy = genericApi (Proxy :: Proxy Routes)
 
-getLink :: Int -> Link
-getLink = fieldLink _get
+-- getLink :: Int -> Link
+-- getLink = fieldLink _get
 
-record :: Routes AsServer
-record = Routes
-    { _get = return . show
-    }
+-- routesLinks :: Routes (AsLink Link)
+-- routesLinks = allFieldLinks
 
-routesLinks :: Routes (AsLink Link)
-routesLinks = allFieldLinks
 
-app :: Application
-app =
-    genericServe record
+app :: DBConnection a -> Application
+app = genericServe . routes
 
 logger :: Environment -> Middleware
 logger = \case
@@ -125,24 +86,50 @@ middleware = compression
 -- | CORS middleware configured with 'appCorsResourcePolicy'.
 corsified :: Middleware
 corsified = cors (const $ Just appCorsResourcePolicy)
+    where
+        -- | Cors resource policy to be used with 'corsified' middleware.
+        --
+        -- This policy will set the following:
+        --
+        -- * RequestHeaders: @Content-Type, Authorization, Origin@
+        -- * MethodsAllowed: @OPTIONS, GET, PUT, POST@
+        appCorsResourcePolicy :: CorsResourcePolicy
+        appCorsResourcePolicy = CorsResourcePolicy
+            { corsOrigins        = Nothing
+            , corsMethods        = ["OPTIONS", "GET", "PUT", "POST"]
+            , corsRequestHeaders = ["Authorization", "Content-Type", "Origin"]
+            , corsExposedHeaders = Nothing
+            , corsMaxAge         = Nothing
+            , corsVaryOrigin     = False
+            , corsRequireOrigin  = False
+            , corsIgnoreFailures = False
+            }
 
 compression :: Middleware
 compression = gzip def
 
--- | Cors resource policy to be used with 'corsified' middleware.
---
--- This policy will set the following:
---
--- * RequestHeaders: @Content-Type, Authorization, Origin@
--- * MethodsAllowed: @OPTIONS, GET, PUT, POST@
-appCorsResourcePolicy :: CorsResourcePolicy
-appCorsResourcePolicy = CorsResourcePolicy
-    { corsOrigins        = Nothing
-    , corsMethods        = ["OPTIONS", "GET", "PUT", "POST"]
-    , corsRequestHeaders = ["Authorization", "Content-Type", "Origin"]
-    , corsExposedHeaders = Nothing
-    , corsMaxAge         = Nothing
-    , corsVaryOrigin     = False
-    , corsRequireOrigin  = False
-    , corsIgnoreFailures = False
+
+-- Main
+main :: IO ()
+main = do
+    ServerConfig {..} <- loadConfig
+    pool <- makePool dbConfig poolConfig
+    let db = runDB env pool
+    let logging = logger env
+        stack
+            = logging
+            . middleware
+            . app
+            $ db
+
+    run port stack
+
+runDB :: ConnectionPool -> Environment -> DBConnection a
+runDB pool = \case
+    Localhost -> runBeamPostgresDebug putStrLn pool
+    Production -> runBeamPostgres pool
+
+data Dependencies = Dependencies
+    { env :: Environment
+    , pool :: ConnectionPool
     }

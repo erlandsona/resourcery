@@ -1,1 +1,3 @@
 # server
+
+`pgcli -U postgres`
