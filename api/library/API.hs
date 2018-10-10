@@ -24,11 +24,18 @@ import Servant.Server.Generic
 
 
 -- Minor Imports only importing certain functions
+import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (runReaderT)
+import Data.Pool (createPool, withResource)
 import Data.Text (Text)
--- import Database.Beam.Postgres
+import Database.Beam.Postgres
+    ( ConnectInfo(..)
+    , connect
+    , close
+    , runBeamPostgresDebug
+    , runBeamPostgres
+    )
 import Network.Wai (Middleware)
-import qualified Network.Wai as Wai
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.Cors (CorsResourcePolicy(..), cors)
 import Network.Wai.Middleware.Gzip (gzip, def)
@@ -37,7 +44,7 @@ import Network.Wai.Middleware.RequestLogger (logStdout, logStdoutDev)
 
 -- Local Imports
 import Config
-import Models (Account)
+import Models (Account, getAccounts)
 
 -- Database Schema
 
@@ -49,8 +56,8 @@ data Routes route = Routes
   deriving (Generic)
 
 routes :: DBConnection a -> Routes AsServer
-routes runDB = Routes
-    { _getAccounts = getAccounts runDB
+routes db = Routes
+    { _getAccounts = getAccounts db
     }
 
 
@@ -72,7 +79,7 @@ logger = \case
     Localhost -> logStdoutDev
     Production -> logStdout
 
-type Middlewares = (Wai.Application -> Wai.Application)
+type Middlewares = (Application -> Application)
 middleware :: Middlewares
 middleware = compression
             -- . allowCsrf
@@ -114,7 +121,7 @@ main :: IO ()
 main = do
     ServerConfig {..} <- loadConfig
     pool <- makePool dbConfig poolConfig
-    let db = runDB env pool
+    let db = runDB env $ pool
     let logging = logger env
         stack
             = logging
@@ -124,12 +131,11 @@ main = do
 
     run port stack
 
-runDB :: ConnectionPool -> Environment -> DBConnection a
-runDB pool = \case
-    Localhost -> runBeamPostgresDebug putStrLn pool
-    Production -> runBeamPostgres pool
+runDB :: Environment -> ConnectionPool -> DBConnection a
+runDB env pool query = return =<< liftIO $ case env of
+    Localhost -> withResource pool $ flip (runBeamPostgresDebug putStrLn) query
+    Production -> withResource pool $ flip (runBeamPostgres) query
 
-data Dependencies = Dependencies
-    { env :: Environment
-    , pool :: ConnectionPool
-    }
+makePool :: DBConfig -> PoolConfig -> IO ConnectionPool
+makePool DBConfig{..} PoolConfig{..} =
+    createPool (connect ConnectInfo{..}) close stripes connectionTimeout connectionsPerStripe

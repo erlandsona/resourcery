@@ -49,7 +49,7 @@ resourceryDb = defaultDbSettings
 
 
 
-getAccounts :: DBConnection a -> Handler [Account]
+getAccounts :: DBConnection [Account] -> Handler [Account]
 getAccounts db = db $ do
-    users <- runSelectReturningList $ select all_ $ dbAccounts resourceryDb
+    users <- runSelectReturningList $ select . all_ $ dbAccounts resourceryDb
     return users
