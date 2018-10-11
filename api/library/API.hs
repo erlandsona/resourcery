@@ -1,18 +1,18 @@
-{-# LANGUAGE DataKinds                  #-}
-{-# LANGUAGE DeriveAnyClass             #-}
-{-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GADTs                      #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE RecordWildCards            #-}
-{-# LANGUAGE StandaloneDeriving         #-}
-{-# LANGUAGE TemplateHaskell            #-}
-{-# LANGUAGE TypeApplications           #-}
-{-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE TypeOperators              #-}
-{-# LANGUAGE TypeSynonymInstances       #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 module API where
 
@@ -24,27 +24,40 @@ import Servant.Server.Generic
 
 
 -- Minor Imports only importing certain functions
-import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Reader (runReaderT)
-import Data.Pool (createPool, withResource)
-import Data.Text (Text)
-import Database.Beam.Postgres
-    ( ConnectInfo(..)
-    , connect
-    , close
-    , runBeamPostgresDebug
-    , runBeamPostgres
+-- import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Except (ExceptT(..))
+import Control.Monad.Logger
+    ( -- runNoLoggingT
+      runStdoutLoggingT
     )
+import qualified Data.ByteString.Char8 as Ch8
+import Data.List (intercalate)
+-- import Data.Pool (withResource)
+import Data.Yaml.Config (loadYamlSettings, useEnv)
+import Database.Persist.Postgresql
+    ( ConnectionString
+    , ConnectionPool
+    , Entity
+    , SqlPersistT
+    , createPostgresqlPool
+    , entityVal
+    , runSqlPool
+    )
+import Database.Persist.Sql (selectList)
 import Network.Wai (Middleware)
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.Cors (CorsResourcePolicy(..), cors)
 import Network.Wai.Middleware.Gzip (gzip, def)
 import Network.Wai.Middleware.RequestLogger (logStdout, logStdoutDev)
 
+-- Servant NT stuff
+import Control.Exception (try)
+import Servant.Utils.Enter ((:~>)(..), enter)
+
 
 -- Local Imports
 import Config
-import Models (Account, getAccounts)
+import Models
 
 -- Database Schema
 
@@ -55,10 +68,20 @@ data Routes route = Routes
     }
   deriving (Generic)
 
-routes :: DBConnection a -> Routes AsServer
-routes db = Routes
+routes :: ConnectionPool -> Routes AsServer
+routes pool = Routes
     { _getAccounts = getAccounts db
     }
+    where
+        db = (flip runSqlPool) pool
+
+type Query a = SqlPersistT IO a -> Handler a
+
+
+getAccounts :: Query a -> Handler [Entity Account]
+getAccounts db = do
+    dbAccounts <- db $ selectList [] []
+    return $ entityVal <$> dbAccounts
 
 
 proxy :: Proxy (ToServantApi Routes)
@@ -71,13 +94,9 @@ proxy = genericApi (Proxy :: Proxy Routes)
 -- routesLinks = allFieldLinks
 
 
-app :: DBConnection a -> Application
+app :: ConnectionPool -> Application
 app = genericServe . routes
 
-logger :: Environment -> Middleware
-logger = \case
-    Localhost -> logStdoutDev
-    Production -> logStdout
 
 type Middlewares = (Application -> Application)
 middleware :: Middlewares
@@ -119,23 +138,33 @@ compression = gzip def
 -- Main
 main :: IO ()
 main = do
-    ServerConfig {..} <- loadConfig
-    pool <- makePool dbConfig poolConfig
-    let db = runDB env $ pool
-    let logging = logger env
-        stack
-            = logging
+    ServerConfig {..} <- loadConf
+
+    let dbConnStr = makeDbConnStr dbConfig
+    let logger = case env of
+            Localhost -> logStdoutDev
+            Production -> logStdout
+    let dbLogger = case env of
+            Localhost -> runStdoutLoggingT
+            -- Test -> runNoLoggingT
+            Production -> runStdoutLoggingT
+    let numOfPoolStripes = case env of
+            Localhost -> 2
+            Production -> 8
+
+    pool <- dbLogger (createPostgresqlPool dbConnStr numOfPoolStripes)
+    let stack
+            = logger
             . middleware
             . app
-            $ db
+            $ pool
 
     run port stack
 
-runDB :: Environment -> ConnectionPool -> DBConnection a
-runDB env pool query = return =<< liftIO $ case env of
-    Localhost -> withResource pool $ flip (runBeamPostgresDebug putStrLn) query
-    Production -> withResource pool $ flip (runBeamPostgres) query
+loadConf :: IO ServerConfig
+loadConf = loadYamlSettings ["config/settings.yaml"] [] useEnv
 
-makePool :: DBConfig -> PoolConfig -> IO ConnectionPool
-makePool DBConfig{..} PoolConfig{..} =
-    createPool (connect ConnectInfo{..}) close stripes connectionTimeout connectionsPerStripe
+makeDbConnStr :: DBConfig -> ConnectionString
+makeDbConnStr DBConfig{..} = Ch8.pack . intercalate " " $ (<>) <$>
+    [ "host=", "dbname=", "user=", "password=", "port="] <*>
+    [dbHost, dbName, dbUser, dbPass, (show dbPort)]

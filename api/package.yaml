@@ -13,13 +13,13 @@ dependencies:
   - base >=4.7 && <5
 
   # Utility Libs
-  # - bytestring
+  - bytestring
   # - elm-export
   # - elm-export-persistent
   # - filepath
   # - hilt
   - monad-logger
-  - mtl
+  # - mtl
   # - http-types
   # - safe
   # - template-haskell
@@ -35,14 +35,15 @@ dependencies:
 
   # DB
   # Really confusing query language.
-  - beam-core
-  - beam-postgres
+  # - beam-core
+  # - beam-postgres
   # - beam-migrate # Add when ready
-  # - persistent
-  # - persistent-postgresql
-  # - persistent-template
-  - postgresql-simple
-  - resource-pool
+  # - postgresql-simple
+  # - resource-pool
+  #
+  - persistent
+  - persistent-postgresql
+  - persistent-template
 
   # Web API Framework
   # - servant-docs
