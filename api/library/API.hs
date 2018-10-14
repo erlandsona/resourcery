@@ -20,7 +20,8 @@ import Servant.Server.Generic
 
 
 -- Minor Imports only importing certain functions
-import Control.Monad.Trans (liftIO)
+import Control.Monad.Trans (MonadIO, liftIO)
+import Control.Monad.Reader (ReaderT)
 -- import Control.Monad.Except (ExceptT(..))
 import Control.Monad.Logger
     ( -- runNoLoggingT
@@ -29,9 +30,14 @@ import Control.Monad.Logger
 import qualified Data.ByteString.Char8 as Char8
 -- import Data.Pool (withResource)
 import Data.Yaml.Config (loadYamlSettings, useEnv)
+import Database.Persist.Class
+    ( PersistQueryRead
+    , PersistRecordBackend
+    )
 import Database.Persist.Postgresql
     ( ConnectionPool
     , Entity
+    , SqlBackend
     , createPostgresqlPool
     , printMigration
     , runMigration
@@ -61,19 +67,29 @@ import Models
 --     } deriving Generic
 -- type ApiRouter = ToServant (ApiRoutes AsApi)
 
-newtype Routes path = Routes
+data Routes path = Routes
     { accounts :: path :- "accounts" :> Get '[JSON] [Entity Account]
+    -- , users :: path :- "users" :> Get '[JSON] [Entity User]
     -- , _put :: route :- ReqBody '[JSON] Int :> Put '[JSON] Bool
     }
   deriving (Generic)
 
 routes :: ConnectionPool -> Routes AsServer
 routes pool = Routes
-    { accounts = index
+    { accounts = db index
+    -- , users = db index
     }
     where
-        fromDb = liftIO . (`runSqlPool` pool)
-        index = fromDb $ selectList [] []
+        db :: ReaderT SqlBackend IO a -> Handler a
+        db = liftIO . (`runSqlPool` pool)
+
+index ::
+    ( MonadIO m
+    , PersistQueryRead backend
+    , PersistRecordBackend record backend
+    ) =>
+    ReaderT backend m [Entity record]
+index = selectList [] []
 
 app :: ConnectionPool -> Application
 app pool = genericServe (routes pool)

@@ -28,4 +28,10 @@ Account json sql=accounts
     email Text
     password Text
     deriving Generic Show
+
+-- User json sql=users
+--     name Text
+--     email Text
+--     password Text
+--     deriving Generic Show
 |]
