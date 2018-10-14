@@ -1,15 +1,11 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TypeSynonymInstances #-}
@@ -24,23 +20,21 @@ import Servant.Server.Generic
 
 
 -- Minor Imports only importing certain functions
--- import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Except (ExceptT(..))
+import Control.Monad.Trans (liftIO)
+-- import Control.Monad.Except (ExceptT(..))
 import Control.Monad.Logger
     ( -- runNoLoggingT
       runStdoutLoggingT
     )
-import qualified Data.ByteString.Char8 as Ch8
-import Data.List (intercalate)
+import qualified Data.ByteString.Char8 as Char8
 -- import Data.Pool (withResource)
 import Data.Yaml.Config (loadYamlSettings, useEnv)
 import Database.Persist.Postgresql
-    ( ConnectionString
-    , ConnectionPool
+    ( ConnectionPool
     , Entity
-    , SqlPersistT
     , createPostgresqlPool
-    , entityVal
+    , printMigration
+    , runMigration
     , runSqlPool
     )
 import Database.Persist.Sql (selectList)
@@ -50,10 +44,6 @@ import Network.Wai.Middleware.Cors (CorsResourcePolicy(..), cors)
 import Network.Wai.Middleware.Gzip (gzip, def)
 import Network.Wai.Middleware.RequestLogger (logStdout, logStdoutDev)
 
--- Servant NT stuff
-import Control.Exception (try)
-import Servant.Utils.Enter ((:~>)(..), enter)
-
 
 -- Local Imports
 import Config
@@ -62,40 +52,31 @@ import Models
 -- Database Schema
 
 -- API Declaration
-data Routes route = Routes
-    { _getAccounts :: route :- Get '[JSON] [Account]
+-- EG:
+-- data ApiRoutes path = ApiRoutes
+--     { allAccounts :: path :- Version :> "accounts" :> Get '[JSON] [Entity Account]
+--     , allShows :: path :- Version :> "shows" :> Get '[JSON] [Entity Gig]
+--     , createShow :: path :- Version :> "shows" :> ReqBody '[JSON] Gig :> Post '[JSON] (Entity Gig)
+--     , deleteShow :: path :- Version :> "shows" :> Capture "id" (Key Gig) :> DeleteNoContent '[JSON] NoContent
+--     } deriving Generic
+-- type ApiRouter = ToServant (ApiRoutes AsApi)
+
+newtype Routes path = Routes
+    { accounts :: path :- "accounts" :> Get '[JSON] [Entity Account]
     -- , _put :: route :- ReqBody '[JSON] Int :> Put '[JSON] Bool
     }
   deriving (Generic)
 
 routes :: ConnectionPool -> Routes AsServer
 routes pool = Routes
-    { _getAccounts = getAccounts db
+    { accounts = index
     }
     where
-        db = (flip runSqlPool) pool
-
-type Query a = SqlPersistT IO a -> Handler a
-
-
-getAccounts :: Query a -> Handler [Entity Account]
-getAccounts db = do
-    dbAccounts <- db $ selectList [] []
-    return $ entityVal <$> dbAccounts
-
-
-proxy :: Proxy (ToServantApi Routes)
-proxy = genericApi (Proxy :: Proxy Routes)
-
--- getLink :: Int -> Link
--- getLink = fieldLink _get
-
--- routesLinks :: Routes (AsLink Link)
--- routesLinks = allFieldLinks
-
+        fromDb = liftIO . (`runSqlPool` pool)
+        index = fromDb $ selectList [] []
 
 app :: ConnectionPool -> Application
-app = genericServe . routes
+app pool = genericServe (routes pool)
 
 
 type Middlewares = (Application -> Application)
@@ -134,37 +115,46 @@ corsified = cors (const $ Just appCorsResourcePolicy)
 compression :: Middleware
 compression = gzip def
 
-
+loadConf :: IO ServerConfig
+loadConf = loadYamlSettings ["config/settings.yaml"] [] useEnv
 -- Main
 main :: IO ()
 main = do
-    ServerConfig {..} <- loadConf
-
-    let dbConnStr = makeDbConnStr dbConfig
-    let logger = case env of
+    conf@ServerConfig{env, port} <- loadConf
+    let logging = case env of
             Localhost -> logStdoutDev
             Production -> logStdout
-    let dbLogger = case env of
-            Localhost -> runStdoutLoggingT
-            -- Test -> runNoLoggingT
-            Production -> runStdoutLoggingT
-    let numOfPoolStripes = case env of
-            Localhost -> 2
-            Production -> 8
 
-    pool <- dbLogger (createPostgresqlPool dbConnStr numOfPoolStripes)
+    pool <- mkPool conf
+
+    flip runSqlPool pool $ do
+        printMigration migrateAll
+        runMigration migrateAll
+
     let stack
-            = logger
+            = logging
             . middleware
             . app
             $ pool
 
+    putStrLn $ "Serving on PORT: " ++ show port
     run port stack
 
-loadConf :: IO ServerConfig
-loadConf = loadYamlSettings ["config/settings.yaml"] [] useEnv
 
-makeDbConnStr :: DBConfig -> ConnectionString
-makeDbConnStr DBConfig{..} = Ch8.pack . intercalate " " $ (<>) <$>
-    [ "host=", "dbname=", "user=", "password=", "port="] <*>
-    [dbHost, dbName, dbUser, dbPass, (show dbPort)]
+mkPool :: ServerConfig -> IO ConnectionPool
+mkPool ServerConfig
+    { dbConfig = DBConfig{..}
+    , env
+    } =
+    runStdoutLoggingT $ createPostgresqlPool connectionString connectionsInPool
+    where
+        connectionsInPool = case env of
+            Localhost -> 2
+            Production -> 8
+        connectionString = Char8.pack $ unwords
+            [ "host="++dbHost
+            , "port="++show dbPort
+            , "user="++dbUser
+            , "password="++dbPass
+            , "dbname="++dbName
+            ]

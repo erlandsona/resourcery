@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -11,7 +12,6 @@
 
 module Models where
 
-import Data.Aeson
 import Data.Text (Text)
 import Database.Persist.TH
     ( mkMigrate
@@ -23,11 +23,9 @@ import Database.Persist.TH
 import GHC.Generics (Generic)
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
-Account sql=accounts
+Account json sql=accounts
     name Text
     email Text
     password Text
-    deriving Generic
+    deriving Generic Show
 |]
-
-instance ToJSON Account

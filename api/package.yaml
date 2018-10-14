@@ -19,7 +19,7 @@ dependencies:
   # - filepath
   # - hilt
   - monad-logger
-  # - mtl
+  - mtl
   # - http-types
   # - safe
   # - template-haskell
@@ -88,7 +88,7 @@ library:
         - -O2
 
 executables:
-  resourcery:
+  resourcery: &defaults
     main: Server.hs
     source-dirs: executables
     ghc-options:
@@ -103,33 +103,17 @@ executables:
       - condition: flag(library-only)
         buildable: false
 
-  # docs:
-  #   <<: *defaults
-  #   main: exe/Docs.hs
-  #   source-dirs: exec
+  seed:
+    <<: *defaults
+    main: db/Seeds.hs
 
   # elmify:
   #   <<: *defaults
-  #   main: exe/Elmify.hs
+  #   main: Elm.hs
 
-  # seed:
-  #   <<: *defaults
-  #   main: db/Seeds.hs
-
-# tests:
-#   resourcery-test:
-#     main: test/Spec.hs
-#     ghc-options:
-#       - -Wall
-#       - -Werror
-#       - -threaded
-#       - -rtsopts
-#       - -with-rtsopts=-N
-#     dependencies:
-#       - resourcery
-#       - hspec
-#       - text
-#       - neat-interpolation
+  # jsify:
+  #    <: *defaults
+  #    main: Js.hs
 
 # Define flags used by "yesod devel" to make compilation faster
 flags:
