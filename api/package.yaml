@@ -103,9 +103,9 @@ executables:
       - condition: flag(library-only)
         buildable: false
 
-  seed:
-    <<: *defaults
-    main: db/Seeds.hs
+  # seed:
+  #   <<: *defaults
+  #   main: db/Seeds.hs
 
   # elmify:
   #   <<: *defaults

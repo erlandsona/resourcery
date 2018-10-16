@@ -133,6 +133,7 @@ compression = gzip def
 
 loadConf :: IO ServerConfig
 loadConf = loadYamlSettings ["config/settings.yaml"] [] useEnv
+
 -- Main
 main :: IO ()
 main = do
