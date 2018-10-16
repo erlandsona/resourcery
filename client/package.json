@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "parcel src/*"
+    "start": "parcel watch src/*"
   },
   "repository": {
     "type": "git",
@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/erlandsona/resourcery#readme",
   "devDependencies": {
+    "node-elm-compiler": "^5.0.1",
     "parcel-bundler": "^1.10.3"
   }
 }
