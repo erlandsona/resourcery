@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "parcel watch src/*"
+    "start": "elm-live src/Main.elm --push-state --debug --open"
   },
   "repository": {
     "type": "git",
@@ -18,7 +18,7 @@
   },
   "homepage": "https://github.com/erlandsona/resourcery#readme",
   "devDependencies": {
-    "node-elm-compiler": "^5.0.1",
-    "parcel-bundler": "^1.10.3"
+    "elm": "^0.19.0-bugfix2",
+    "elm-live": "^3.1.0"
   }
 }

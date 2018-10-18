@@ -1,11 +1,11 @@
-module Sourcerer exposing
+module Sourcerers exposing
     ( Sourcerer
     ,  SourcerersId
        -- , new
 
     )
 
-import Objective
+import Objectives
 
 
 

@@ -1,4 +1,4 @@
-module Patron exposing
+module Patrons exposing
     ( Patron
     ,  PatronId
        -- , new
