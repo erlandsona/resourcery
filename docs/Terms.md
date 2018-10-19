@@ -14,4 +14,3 @@ Things:
     - Sourcer works on Objectives in their pipeline
     - Patron prioritizes Epics in a Sourcerers pipeline
     - Philosopher prioritizes Objectives in an Epic
-
