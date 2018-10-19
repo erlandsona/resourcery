@@ -42,3 +42,5 @@ ci-access-key.json
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
 .cache
+client/index.html
+elm-spa-example/
