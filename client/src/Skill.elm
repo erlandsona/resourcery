@@ -1,21 +1,15 @@
 module Skill exposing
-    ( Magic
-    , Skill
-    , SkillId
+    ( Skill
     , new
     )
 
-import Util
+
+type Skill
+    = Skill (Maybe Int) Name
 
 
-type alias Skill =
-    { id : SkillId
-    , name : Name
-    }
-
-
-type SkillId
-    = SkillId (Maybe Int)
+type Name
+    = Name String
 
 
 new : Name -> Skill

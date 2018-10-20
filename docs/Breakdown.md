@@ -17,6 +17,3 @@
 
 ## For developers: This may be answered if we go with integrations...
     - What do I need to work on today based on what priorities?
-
-## Ideas on Training:
-    - Have every client start with an Epic, because the relationship you're building will be.
