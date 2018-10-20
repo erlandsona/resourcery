@@ -7,7 +7,3 @@ import Sourcerer exposing (Sourcerer)
 type Account
     = Patron
     | Sourcerer
-
-
-type Id
-    = Id (Maybe Int)

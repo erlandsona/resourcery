@@ -13,8 +13,7 @@ type Idea
 
 
 type alias Info =
-    { id : Id
-    , description : Description
+    { description : Description
     , creator : Account
     }
 

@@ -10,13 +10,8 @@ type Sourcerer
     = Sourcerer Info
 
 
-type Id
-    = Id (Maybe Int)
-
-
 type alias Info =
-    { id : Id
-    , name : Name
+    { name : Name
     , casting : Maybe Incantation -- head quest from summons
     , summons : Summons -- head pipeline
     , journey : Pipeline -- tail pipeline

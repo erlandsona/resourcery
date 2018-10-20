@@ -1,6 +1,5 @@
 module Incantation exposing
-    ( Id
-    , Incantation
+    ( Incantation
     , Philosophy
     , fibonacci
     , new
@@ -10,21 +9,16 @@ import Incantation.Story exposing (Story)
 import Prowess exposing (Prowess)
 
 
-type Id
-    = Id (Maybe Int)
-
-
 type alias Incantation =
     -- Synonyms: Charm, Curse, Jinx
-    { id : Id
-    , description : Story
+    { description : Story
     , philosophy : Philosophy
     }
 
 
 new : Story -> Philosophy -> Incantation
 new =
-    Incantation (Id Nothing)
+    Incantation
 
 
 type Philosophy
