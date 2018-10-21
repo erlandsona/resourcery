@@ -14,16 +14,19 @@ suite =
         [ describe "estimate"
             [ test "given a Summons with no quest and no prowess returns the scope of a project to be 0 hours" <|
                 \() ->
-                    let
-                        summons =
-                            Summons (Quest []) (Prowess [])
-                    in
                     Expect.equal
-                        (estimate summons)
+                        (estimate <| Summons (Quest []))
+                        (Fellowship [ Sourcerer {} ])
                         (Hours 0)
             , test "given a Summons with a non-empty Quest and empty Prowess" <|
                 \() ->
                     let
+                        editCode =
+                            Skill "edit code"
+
+                        git =
+                            Skill "git"
+
                         summons =
                             Summons
                                 (Quest
@@ -33,14 +36,21 @@ suite =
                                             (IWantTo "change the text")
                                             (SoThat "it is blue.")
                                         )
-                                        (GuessOf One (Prowess [ Skill "edit code" ]))
+                                        (GuessOf One (Mastery [ editCode ]))
+                                    , Incantation
+                                        (AsA (Patron (Name "Joe"))
+                                            (IWantTo "update the color of the button")
+                                            (SoThat "it is consistent with the theme")
+                                        )
+                                        (GuessOf Two (Mastery [ editCode, git ]))
                                     ]
                                 )
-                                (Prowess [])
+                                Fellowship
+                                [ Sourcerer {} ]
                     in
                     Expect.equal
-                        (estimate summons)
-                        (Hours 1)
+                        (estimate GuessOf summons)
+                        (Hours 3)
             ]
         , describe "velocity"
             [ test "given a Summons returns the scope of a project relative to the Pay Period" <|
