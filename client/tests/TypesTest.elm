@@ -1,4 +1,4 @@
-module SummonsT exposing (suite)
+module TypesTest exposing (suite)
 
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
@@ -33,7 +33,7 @@ suite =
                                             (IWantTo "change the text")
                                             (SoThat "it is blue.")
                                         )
-                                        (GuessOf One (Prowess []))
+                                        (GuessOf One (Prowess [ Skill "edit code" ]))
                                     ]
                                 )
                                 (Prowess [])

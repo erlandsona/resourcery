@@ -3,7 +3,6 @@ module Types exposing
     , Description(..)
     , Fibonacci(..)
     , Idea(..)
-    , IdeaInfo
     , Incantation
     , Name(..)
     , Period(..)
@@ -23,7 +22,11 @@ module Types exposing
 import Date exposing (Date)
 
 
-type Summons
+type
+    Summons
+    -- Prowess is too general there needs to be a distinction between:
+    -- the idea of the skill required to accomplish a task
+    -- and the accumulation of those skills defined by the understanding of a language or technology.
     = Summons Quest Prowess
 
 
