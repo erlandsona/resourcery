@@ -11,9 +11,9 @@
             - How can we build faster & simpler deployment systems?
 
 ## For clients:
-    - Where is my $ going?
-    - How long until what I'm asking for will become a reality?
-    - What are my options w/ resp. to solutions?
+    - Where is my $ going? Budgeting
+    - How long until what I'm asking for will become a reality? Estimation
+    - What are my options w/ resp. to solutions? Options
 
 ## For developers: This may be answered if we go with integrations...
     - What do I need to work on today based on what priorities?

@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "elm-live src/Main.elm --push-state --debug --open"
+    "start": "elm-live src/Main.elm --push-state --debug --open --before-build elm-test"
   },
   "repository": {
     "type": "git",
@@ -19,6 +19,7 @@
   "homepage": "https://github.com/erlandsona/resourcery#readme",
   "devDependencies": {
     "elm": "^0.19.0-bugfix2",
-    "elm-live": "^3.1.0"
+    "elm-live": "^3.1.0",
+    "elm-test": "^0.19.0-beta10"
   }
 }
