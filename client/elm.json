@@ -9,15 +9,17 @@
             "elm/browser": "1.0.0",
             "elm/core": "1.0.0",
             "elm/html": "1.0.0",
+            "elm/time": "1.0.0",
             "elm/url": "1.0.0",
-            "justinmimbs/date": "3.1.2",
+            "elm-community/list-extra": "8.1.0",
+            "justinmimbs/time-extra": "1.1.0",
             "mdgriffith/elm-ui": "1.1.0"
         },
         "indirect": {
             "elm/json": "1.0.0",
             "elm/parser": "1.1.0",
-            "elm/time": "1.0.0",
-            "elm/virtual-dom": "1.0.2"
+            "elm/virtual-dom": "1.0.2",
+            "justinmimbs/date": "3.1.2"
         }
     },
     "test-dependencies": {

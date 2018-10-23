@@ -1,6 +1,8 @@
-module Types exposing (Account(..), Deed(..), Description(..), Fellowship(..), Fibonacci(..), History(..), Idea(..), Incantation, Mastery(..), Name(..), Period(..), Philosophy(..), Pipeline(..), Prowess(..), Quest(..), Reason(..), Scope(..), Skill(..), Sourcerer, Summons(..), estimate, fibonacci, period, velocity)
+module Types exposing (Account(..), Deed(..), Description(..), Fellowship(..), Fibonacci(..), History(..), Idea(..), Incantation, Mastery(..), Name(..), Philosophy(..), Pipeline(..), Prowess(..), Quest(..), Reason(..), Scope(..), Skill(..), Sourcerer, Sprint(..), Summons(..), defSprint, estimate, fibonacci, period, sourcerersVelocity, speed)
 
-import Date exposing (Date)
+import List.Extra as ListE
+import Time exposing (Posix, utc)
+import Time.Extra as TimE exposing (Interval(..))
 
 
 type Summons
@@ -15,67 +17,105 @@ type Quest
     = Quest (List Incantation)
 
 
+
+-- Not sure mixing billing and estimation here is ideal...
+
+
 type Scope
     = Hours Int
-    | End Date
-    | Pay Period
+    | End Posix
+    | Monthly
 
 
-type Period
-    = Sprint -- Two weeks
-    | Month -- ~ Four weeks
+type Sprint
+    = Days Int
 
 
-period : Period -> Float
-period p =
+defSprint : Sprint
+defSprint =
+    Days 14
+
+
+requiredHoursWorkedInASprintPeriod : Float
+requiredHoursWorkedInASprintPeriod =
+    80
+
+
+speed : List Sourcerer -> Int
+speed =
+    List.foldl (sourcerersVelocity >> (+)) 0
+
+
+period : List Sourcerer -> Float
+period =
+    toFloat << List.foldl (.history >> (\(Historical h) -> h) >> List.length >> (+)) 0
+
+
+estimate : Summons -> Scope
+estimate (Summons (Quest incantations) (Fellowship sourcerers)) =
     let
-        daysInAWeek =
-            7
+        fellowshipsAvgVelocity =
+            (toFloat <| List.foldl (sourcerersVelocity >> (+)) 0 sourcerers)
+                / (toFloat <| List.length sourcerers)
 
-        daysInAYear =
-            365
-
-        monthsInAYear =
-            12
-
-        daysInAMonth =
-            daysInAYear / monthsInAYear
-
-        weeksInAMonth =
-            (daysInAYear / monthsInAYear) / daysInAWeek
-
-        hoursPerWeekWorked =
-            40
+        -- hours
     in
-    case p of
-        Sprint ->
-            80
-
-        -- hours given a 40 hour week
-        Month ->
-            hoursPerWeekWorked * weeksInAMonth
-
-
-estimate : Period -> Summons -> Scope
-estimate per (Summons (Quest incantations) (Fellowship sourcerers)) =
-    let
-        history =
-            History <| List.concatMap (.history >> (\(History deeds) -> deeds)) sourcerers
-    in
-    List.foldl ((+) << fibonacci << .effort) 0 incantations
-        -- Need to conretize this idea.
-        |> (\sum -> round (sum / velocity history per))
+    toFloat (List.foldl ((+) << fibonacci << .effort) 0 incantations)
+        |> (\sum -> round <| (sum / fellowshipsAvgVelocity) * requiredHoursWorkedInASprintPeriod)
         |> Hours
 
 
 
--- Like Miles Per Hour... but instead we use Points per Period
+-- Like Miles Per Hour... but instead we use Points per Sprint?
 
 
-velocity : History -> Period -> Float
-velocity (History deeds) per =
-    List.foldl ((\(Deed philosophy) -> philosophy) >> fibonacci >> (+)) 0 deeds
-        |> (\sum -> sum / period per)
+sourcerersVelocity : Sourcerer -> Int
+sourcerersVelocity s =
+    let
+        (Historical deeds) =
+            .history s
+
+        twoWeeksInMillis =
+            14 * 24 * 60 * 60 * 1000
+
+        sprInt =
+            defSprint
+                |> (\(Days int) -> int)
+
+        groupedDeeds =
+            deeds
+                |> List.sortBy (\(Deed _ timestamp) -> Time.posixToMillis timestamp)
+                |> ListE.groupWhile
+                    (\(Deed _ timeA) (Deed _ timeB) ->
+                        TimE.diff Day utc timeA timeB <= sprInt
+                    )
+
+        sumOfDeeds =
+            List.foldl ((\(Deed philosophy date) -> philosophy) >> fibonacci >> (+)) 0
+
+        makeSprint ( a, aS ) =
+            let
+                lst =
+                    a :: aS
+
+                lng =
+                    List.length lst
+            in
+            ( lng, sumOfDeeds lst * lng )
+
+        groupedDeedsSummed =
+            List.map makeSprint groupedDeeds
+
+        avgSums =
+            toFloat <| List.foldl (Tuple.second >> (+)) 0 groupedDeedsSummed
+
+        sumOfLngs =
+            toFloat <| List.foldl (Tuple.first >> (+)) 0 groupedDeedsSummed
+
+        -- numOfSprints =
+        --     toFloat <| List.length groupedDeeds
+    in
+    round <| avgSums / sumOfLngs
 
 
 
@@ -84,11 +124,11 @@ velocity (History deeds) per =
 
 
 type History
-    = History (List Deed)
+    = Historical (List Deed)
 
 
 type Deed
-    = Deed Philosophy
+    = Deed Philosophy Posix
 
 
 type alias Incantation =
@@ -123,7 +163,7 @@ type Fibonacci
     | Thirteen
 
 
-fibonacci : Philosophy -> Float
+fibonacci : Philosophy -> Int
 fibonacci (GuessOf complexity _) =
     case complexity of
         One ->
@@ -160,7 +200,7 @@ type Prowess
 
 
 type Mastery
-    = Mastery (List Skill)
+    = MasterOf (List Skill)
 
 
 type Skill
@@ -168,7 +208,7 @@ type Skill
 
 
 type Name
-    = Name String
+    = Named String
 
 
 type Account
@@ -178,9 +218,10 @@ type Account
 
 
 type alias Sourcerer =
-    { name : Name
-    , casting : Maybe Incantation -- head quest from summons
-    , summons : Summons -- head pipeline
+    { casting : Maybe Incantation -- head quest from summons
+    , named : Name
+
+    -- , summons : Summons -- head pipeline
     , journey : Pipeline -- tail pipeline
     , history : History -- List of Deeds / Incantations performed
     , skills : Prowess -- Seed of Skills + prowess attained from philosophies learned by completing Incantations on Quests...
