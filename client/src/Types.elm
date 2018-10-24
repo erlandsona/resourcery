@@ -1,4 +1,37 @@
-module Types exposing (Account(..), Deed(..), Description(..), Fellowship(..), Fibonacci(..), History(..), Idea(..), Incantation, Mastery(..), Name(..), Philosophy(..), Pipeline(..), Prowess(..), Quest(..), Reason(..), Scope(..), Skill(..), Sourcerer, Sprint(..), Summons(..), defSprint, estimate, fibonacci, period, sourcerersVelocity, speed)
+module Types exposing
+    ( Account(..)
+    , Deed(..)
+    , Description(..)
+    , Fellowship(..)
+    , Fibonacci(..)
+    , History(..)
+    , Idea(..)
+    , Incantation
+    , Journey(..)
+    , Mastery(..)
+    , Name(..)
+    , Philosophy(..)
+    , Pipeline(..)
+    , Prowess(..)
+    , Quest(..)
+    , Reason(..)
+    , Scope(..)
+    , Skill(..)
+    , Sourcerer
+    , Summons(..)
+    , devOps
+    ,  estimate
+       -- Private Functions used by estimate
+       -- , costOf
+       -- , defJourney
+       -- , fibonacci
+       -- , speed
+
+    , oop
+    , php
+    , ruby
+    , velocity
+    )
 
 import List.Extra as ListE
 import Time exposing (Posix, utc)
@@ -21,101 +54,107 @@ type Quest
 -- Not sure mixing billing and estimation here is ideal...
 
 
-type Scope
+type
+    Scope
+    -- | End Posix
+    -- | Monthly
     = Hours Int
-    | End Posix
-    | Monthly
 
 
-type Sprint
+type Journey
     = Days Int
 
 
-defSprint : Sprint
-defSprint =
+defJourney : Journey
+defJourney =
     Days 14
 
 
-requiredHoursWorkedInASprintPeriod : Float
-requiredHoursWorkedInASprintPeriod =
+hoursWorkedPerTale : Float
+hoursWorkedPerTale =
     80
 
 
-speed : List Sourcerer -> Int
-speed =
-    List.foldl (sourcerersVelocity >> (+)) 0
-
-
-period : List Sourcerer -> Float
-period =
-    toFloat << List.foldl (.history >> (\(Historical h) -> h) >> List.length >> (+)) 0
-
-
 estimate : Summons -> Scope
-estimate (Summons (Quest incantations) (Fellowship sourcerers)) =
-    let
-        fellowshipsAvgVelocity =
-            (toFloat <| List.foldl (sourcerersVelocity >> (+)) 0 sourcerers)
-                / (toFloat <| List.length sourcerers)
-
-        -- hours
-    in
-    toFloat (List.foldl ((+) << fibonacci << .effort) 0 incantations)
-        |> (\sum -> round <| (sum / fellowshipsAvgVelocity) * requiredHoursWorkedInASprintPeriod)
+estimate (Summons (Quest incantations) (Fellowship f)) =
+    costOf incantations
+        |> (\(Hours cost) -> round <| (toFloat cost / toFloat (sum velocity f)) * hoursWorkedPerTale)
         |> Hours
 
 
+costOf : List Incantation -> Scope
+costOf =
+    Hours << sum (.effort >> (\(GuessOf fib _) -> fib) >> fibonacci)
 
--- Like Miles Per Hour... but instead we use Points per Sprint?
 
 
-sourcerersVelocity : Sourcerer -> Int
-sourcerersVelocity s =
+-- Like Miles Per Hour... but instead we use Points per Journey?
+
+
+sprInt : Int
+sprInt =
+    defJourney
+        |> (\(Days int) -> int)
+
+
+sumOfDeeds : List Deed -> Int
+sumOfDeeds =
+    sum <| (\(Deed fib _) -> fib) >> fibonacci
+
+
+sum : (a -> number) -> List a -> number
+sum f =
+    List.foldl (f >> (+)) 0
+
+
+type alias Tale =
+    { numOfDeeds : Float
+    , sumOfPoints : Float
+    }
+
+
+organize : List Deed -> List ( Deed, List Deed )
+organize =
+    List.sortBy (\(Deed _ timestamp) -> Time.posixToMillis timestamp)
+        >> ListE.groupWhile
+            (\(Deed _ timeA) (Deed _ timeB) ->
+                TimE.diff Day utc timeA timeB <= sprInt
+            )
+
+
+tale : ( Deed, List Deed ) -> Tale
+tale ( deed, deeds ) =
+    let
+        lst =
+            deed :: deeds
+
+        numOfDeeds =
+            List.length lst
+    in
+    { sumOfPoints = toFloat <| sumOfDeeds lst * numOfDeeds
+    , numOfDeeds = toFloat numOfDeeds
+    }
+
+
+velocity : Sourcerer -> Int
+velocity s =
     let
         (Historical deeds) =
             .history s
 
-        twoWeeksInMillis =
-            14 * 24 * 60 * 60 * 1000
+        tales =
+            List.map tale (organize deeds)
 
-        sprInt =
-            defSprint
-                |> (\(Days int) -> int)
+        sumOfNumOfDeeds =
+            sum .numOfDeeds tales
 
-        groupedDeeds =
-            deeds
-                |> List.sortBy (\(Deed _ timestamp) -> Time.posixToMillis timestamp)
-                |> ListE.groupWhile
-                    (\(Deed _ timeA) (Deed _ timeB) ->
-                        TimE.diff Day utc timeA timeB <= sprInt
-                    )
+        sumOfAllPoints =
+            sum .sumOfPoints tales
 
-        sumOfDeeds =
-            List.foldl ((\(Deed philosophy date) -> philosophy) >> fibonacci >> (+)) 0
-
-        makeSprint ( a, aS ) =
-            let
-                lst =
-                    a :: aS
-
-                lng =
-                    List.length lst
-            in
-            ( lng, sumOfDeeds lst * lng )
-
-        groupedDeedsSummed =
-            List.map makeSprint groupedDeeds
-
-        avgSums =
-            toFloat <| List.foldl (Tuple.second >> (+)) 0 groupedDeedsSummed
-
-        sumOfLngs =
-            toFloat <| List.foldl (Tuple.first >> (+)) 0 groupedDeedsSummed
-
-        -- numOfSprints =
+        -- numOfTales =
         --     toFloat <| List.length groupedDeeds
     in
-    round <| avgSums / sumOfLngs
+    round (sumOfAllPoints / sumOfNumOfDeeds)
 
 
 
@@ -128,7 +167,7 @@ type History
 
 
 type Deed
-    = Deed Philosophy Posix
+    = Deed Fibonacci Posix
 
 
 type alias Incantation =
@@ -163,8 +202,8 @@ type Fibonacci
     | Thirteen
 
 
-fibonacci : Philosophy -> Int
-fibonacci (GuessOf complexity _) =
+fibonacci : Fibonacci -> Int
+fibonacci complexity =
     case complexity of
         One ->
             1
@@ -222,7 +261,27 @@ type alias Sourcerer =
     , named : Name
 
     -- , summons : Summons -- head pipeline
-    , journey : Pipeline -- tail pipeline
+    , future : Pipeline -- tail pipeline
     , history : History -- List of Deeds / Incantations performed
     , skills : Prowess -- Seed of Skills + prowess attained from philosophies learned by completing Incantations on Quests...
     }
+
+
+ruby : Skill
+ruby =
+    Skill "ruby"
+
+
+php : Skill
+php =
+    Skill "PHP"
+
+
+oop : Skill
+oop =
+    Skill "Object Oriented Web Languages"
+
+
+devOps : Skill
+devOps =
+    Skill "DevOps"
