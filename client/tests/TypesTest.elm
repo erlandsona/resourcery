@@ -3,6 +3,7 @@ module TypesTest exposing (suite)
 import Basics exposing (Float(..))
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
+import Skills exposing (..)
 import Test exposing (..)
 import Time exposing (Month(..), utc)
 import Time.Extra as TimE exposing (Parts)
@@ -41,7 +42,7 @@ suite =
                                             (IWantTo "update the color of the button")
                                             (SoThat "it is consistent with the theme")
                                         )
-                                        (GuessOf Two (MasterOf [ editCode, git ]))
+                                        (GuessOf Two (MasterOf editCode))
                                     ]
                                 )
                                 emptyFellowship
@@ -68,37 +69,37 @@ suite =
                                             (IWantTo "build an index page for Users")
                                             (SoThat "I can see who's using the system")
                                         )
-                                        (GuessOf Eight (MasterOf [ git ]))
+                                        (GuessOf Eight (MasterOf git))
                                     , Incantation
                                         (AsA joe
                                             (IWantTo "update the color of the button")
                                             (SoThat "it is consistent with the theme")
                                         )
-                                        (GuessOf Two (MasterOf [ editCode, git ]))
+                                        (GuessOf Two (MasterOf editCode))
                                     , Incantation
                                         (AsA joe
                                             (IWantTo "implement search")
                                             (SoThat "I can find what I'm looking for.")
                                         )
-                                        (GuessOf Thirteen (MasterOf [ editCode, git ]))
+                                        (GuessOf Thirteen (MasterOf editCode))
                                     , Incantation
                                         (AsA joe
                                             (IWantTo "deploy my app")
                                             (SoThat "I can see it somewhere")
                                         )
-                                        (GuessOf Thirteen (MasterOf [ editCode, git ]))
+                                        (GuessOf Thirteen (MasterOf editCode))
                                     , Incantation
                                         (AsA joe
                                             (IWantTo "Integrate with 3rd Party Oauth client")
                                             (SoThat "users can connect their profiles")
                                         )
-                                        (GuessOf Thirteen (MasterOf [ editCode, git ]))
+                                        (GuessOf Thirteen (MasterOf editCode))
                                     , Incantation
                                         (AsA joe
                                             (IWantTo "change the color of the button to blue")
                                             (SoThat "it is consistent with the site theme.")
                                         )
-                                        (GuessOf One (MasterOf [ editCode ]))
+                                        (GuessOf One (MasterOf editCode))
                                     ]
                                 )
                                 (Fellowship [ austin ])
@@ -122,37 +123,37 @@ suite =
                                             (IWantTo "build an index page for Users")
                                             (SoThat "I can see who's using the system")
                                         )
-                                        (GuessOf Eight (MasterOf [ git ]))
+                                        (GuessOf Eight (MasterOf git))
                                     , Incantation
                                         (AsA joe
                                             (IWantTo "update the color of the button")
                                             (SoThat "it is consistent with the theme")
                                         )
-                                        (GuessOf Two (MasterOf [ editCode, git ]))
+                                        (GuessOf Two (MasterOf <| Skills.new [ editCode, git ]))
                                     , Incantation
                                         (AsA joe
                                             (IWantTo "implement search")
                                             (SoThat "I can find what I'm looking for.")
                                         )
-                                        (GuessOf Thirteen (MasterOf [ editCode, git ]))
+                                        (GuessOf Thirteen (MasterOf <| Skills.new [ editCode, git ]))
                                     , Incantation
                                         (AsA joe
                                             (IWantTo "deploy my app")
                                             (SoThat "I can see it somewhere")
                                         )
-                                        (GuessOf Thirteen (MasterOf [ editCode, git ]))
+                                        (GuessOf Thirteen (MasterOf <| Skills.new [ editCode, git ]))
                                     , Incantation
                                         (AsA joe
                                             (IWantTo "Integrate with 3rd Party Oauth client")
                                             (SoThat "users can connect their profiles")
                                         )
-                                        (GuessOf Thirteen (MasterOf [ editCode, git ]))
+                                        (GuessOf Thirteen (MasterOf <| Skills.new [ editCode, git ]))
                                     , Incantation
                                         (AsA joe
                                             (IWantTo "change the color of the button to blue")
                                             (SoThat "it is consistent with the site theme.")
                                         )
-                                        (GuessOf One (MasterOf [ editCode ]))
+                                        (GuessOf One (MasterOf editCode))
                                     ]
                                 )
                                 (Fellowship [ austin, dom ])
@@ -179,11 +180,12 @@ dom =
     , named = Named "Dominic Serrano"
     , future = Pipeline []
     , history = fourteenPointAvgPointsPerSprint
-    , skills =
-        Prowess
-            [ oop
-            , php
-            ]
+    , skillSet =
+        Prowess <|
+            Skills.new
+                [ oop
+                , php
+                ]
     }
 
 
@@ -194,13 +196,14 @@ austin =
     , named = Named "Austin Erlandson"
     , future = Pipeline [ Summons (Quest []) (Fellowship []) ]
     , history = fifteenPointsPerSprintHistory
-    , skills =
-        Prowess
-            [ ruby
-            , php
-            , oop
-            , devOps
-            ]
+    , skillSet =
+        Prowess <|
+            Skills.new
+                [ ruby
+                , php
+                , oop
+                , devOps
+                ]
     }
 
 
@@ -264,13 +267,3 @@ fourteenPointAvgPointsPerSprint =
 fromCalendarDate y m d =
     Parts y m d 0 0 0 0
         |> TimE.partsToPosix utc
-
-
-editCode : Skill
-editCode =
-    Skill "edit code"
-
-
-git : Skill
-git =
-    Skill "git"

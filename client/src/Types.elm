@@ -16,10 +16,8 @@ module Types exposing
     , Quest(..)
     , Reason(..)
     , Scope(..)
-    , Skill(..)
     , Sourcerer
     , Summons(..)
-    , devOps
     ,  estimate
        -- Private Functions used by estimate
        -- , costOf
@@ -27,13 +25,11 @@ module Types exposing
        -- , fibonacci
        -- , speed
 
-    , oop
-    , php
-    , ruby
     , velocity
     )
 
 import List.Extra as ListE
+import Skills exposing (Skills)
 import Time exposing (Posix, utc)
 import Time.Extra as TimE exposing (Interval(..))
 
@@ -235,15 +231,11 @@ type Pipeline
 
 
 type Prowess
-    = Prowess (List Skill)
+    = Prowess Skills
 
 
 type Mastery
-    = MasterOf (List Skill)
-
-
-type Skill
-    = Skill String
+    = MasterOf Skills
 
 
 type Name
@@ -263,25 +255,22 @@ type alias Sourcerer =
     -- , summons : Summons -- head pipeline
     , future : Pipeline -- tail pipeline
     , history : History -- List of Deeds / Incantations performed
-    , skills : Prowess -- Seed of Skills + prowess attained from philosophies learned by completing Incantations on Quests...
+    , skillSet : Prowess -- Seed of Skills + prowess attained from philosophies learned by completing Incantations on Quests...
     }
 
 
-ruby : Skill
-ruby =
-    Skill "ruby"
+castSpell : Posix -> Sourcerer -> Incantation -> Sourcerer
+castSpell timestamp s { effort } =
+    let
+        (GuessOf fib mastery) =
+            effort
+    in
+    { s
+        | history = Historical (.history s |> (\(Historical deeds) -> Deed fib timestamp :: deeds))
+        , skillSet = improve (.skillSet s) mastery
+    }
 
 
-php : Skill
-php =
-    Skill "PHP"
-
-
-oop : Skill
-oop =
-    Skill "Object Oriented Web Languages"
-
-
-devOps : Skill
-devOps =
-    Skill "DevOps"
+improve : Prowess -> Mastery -> Prowess
+improve (Prowess skillSet) (MasterOf skills) =
+    Prowess <| Skills.merge skillSet skills
