@@ -18,6 +18,7 @@ module Types exposing
     , Scope(..)
     , Sourcerer
     , Summons(..)
+    , castSpell
     ,  estimate
        -- Private Functions used by estimate
        -- , costOf

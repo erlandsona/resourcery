@@ -166,6 +166,40 @@ suite =
                         -- because 50 / 29 * 80hours per sprint ~ 138
                         (Hours 138)
             ]
+        , describe "castSpell"
+            [ test "adds mastery from incantation to sourcerers prowess" <|
+                \() ->
+                    let
+                        { prowess } =
+                            castSpell
+                                (fromCalendarDate 2018 Oct 23)
+                                dom
+                                (Incantation
+                                    (AsA joe
+                                        (IWantTo "change the color of the button to blue")
+                                        (SoThat "it is consistent with the site theme.")
+                                    )
+                                    (GuessOf One (MasterOf editCode))
+                                )
+                    in
+                    Expect.equal prowess (Prowess <| Magic.new [ oop, php, editCode ])
+            , test "doesn't add duplicate skills from mastery to sourcerers prowess" <|
+                \() ->
+                    let
+                        { prowess } =
+                            castSpell
+                                (fromCalendarDate 2018 Oct 23)
+                                dom
+                                (Incantation
+                                    (AsA joe
+                                        (IWantTo "change the color of the button to blue")
+                                        (SoThat "it is consistent with the site theme.")
+                                    )
+                                    (GuessOf One (MasterOf php))
+                                )
+                    in
+                    Expect.equal prowess (Prowess <| Magic.new [ oop, php ])
+            ]
         ]
 
 
