@@ -1,5 +1,5 @@
-module Skills exposing
-    ( Skills
+module Magic exposing
+    ( Magic
     , devOps
     , editCode
     , git
@@ -13,45 +13,45 @@ module Skills exposing
 import Set exposing (Set)
 
 
-type Skills
+type Magic
     = Skill (Set String)
 
 
-new : List Skills -> Skills
+new : List Magic -> Magic
 new =
     List.foldl (\(Skill setA) (Skill setB) -> Skill <| Set.union setA setB) (Skill Set.empty)
 
 
-merge : Skills -> Skills -> Skills
+merge : Magic -> Magic -> Magic
 merge (Skill setA) (Skill setB) =
     Skill <| Set.union setA setB
 
 
-ruby : Skills
+ruby : Magic
 ruby =
     Skill <| Set.singleton "ruby"
 
 
-php : Skills
+php : Magic
 php =
     Skill <| Set.singleton "PHP"
 
 
-oop : Skills
+oop : Magic
 oop =
     Skill <| Set.singleton "Object Oriented Web Languages"
 
 
-devOps : Skills
+devOps : Magic
 devOps =
     Skill <| Set.singleton "DevOps"
 
 
-editCode : Skills
+editCode : Magic
 editCode =
     Skill <| Set.singleton "edit code"
 
 
-git : Skills
+git : Magic
 git =
     Skill <| Set.singleton "git"

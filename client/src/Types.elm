@@ -29,7 +29,7 @@ module Types exposing
     )
 
 import List.Extra as ListE
-import Skills exposing (Skills)
+import Magic exposing (Magic)
 import Time exposing (Posix, utc)
 import Time.Extra as TimE exposing (Interval(..))
 
@@ -231,11 +231,11 @@ type Pipeline
 
 
 type Prowess
-    = Prowess Skills
+    = Prowess Magic
 
 
 type Mastery
-    = MasterOf Skills
+    = MasterOf Magic
 
 
 type Name
@@ -255,7 +255,7 @@ type alias Sourcerer =
     -- , summons : Summons -- head pipeline
     , future : Pipeline -- tail pipeline
     , history : History -- List of Deeds / Incantations performed
-    , skillSet : Prowess -- Seed of Skills + prowess attained from philosophies learned by completing Incantations on Quests...
+    , prowess : Prowess -- Seed of Magic + prowess attained from philosophies learned by completing Incantations on Quests...
     }
 
 
@@ -267,10 +267,10 @@ castSpell timestamp s { effort } =
     in
     { s
         | history = Historical (.history s |> (\(Historical deeds) -> Deed fib timestamp :: deeds))
-        , skillSet = improve (.skillSet s) mastery
+        , prowess = improve (.prowess s) mastery
     }
 
 
 improve : Prowess -> Mastery -> Prowess
-improve (Prowess skillSet) (MasterOf skills) =
-    Prowess <| Skills.merge skillSet skills
+improve (Prowess prowess) (MasterOf skills) =
+    Prowess <| Magic.merge prowess skills

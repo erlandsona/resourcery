@@ -3,7 +3,7 @@ module TypesTest exposing (suite)
 import Basics exposing (Float(..))
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
-import Skills exposing (..)
+import Magic exposing (..)
 import Test exposing (..)
 import Time exposing (Month(..), utc)
 import Time.Extra as TimE exposing (Parts)
@@ -129,25 +129,25 @@ suite =
                                             (IWantTo "update the color of the button")
                                             (SoThat "it is consistent with the theme")
                                         )
-                                        (GuessOf Two (MasterOf <| Skills.new [ editCode, git ]))
+                                        (GuessOf Two (MasterOf <| Magic.new [ editCode, git ]))
                                     , Incantation
                                         (AsA joe
                                             (IWantTo "implement search")
                                             (SoThat "I can find what I'm looking for.")
                                         )
-                                        (GuessOf Thirteen (MasterOf <| Skills.new [ editCode, git ]))
+                                        (GuessOf Thirteen (MasterOf <| Magic.new [ editCode, git ]))
                                     , Incantation
                                         (AsA joe
                                             (IWantTo "deploy my app")
                                             (SoThat "I can see it somewhere")
                                         )
-                                        (GuessOf Thirteen (MasterOf <| Skills.new [ editCode, git ]))
+                                        (GuessOf Thirteen (MasterOf <| Magic.new [ editCode, git ]))
                                     , Incantation
                                         (AsA joe
                                             (IWantTo "Integrate with 3rd Party Oauth client")
                                             (SoThat "users can connect their profiles")
                                         )
-                                        (GuessOf Thirteen (MasterOf <| Skills.new [ editCode, git ]))
+                                        (GuessOf Thirteen (MasterOf <| Magic.new [ editCode, git ]))
                                     , Incantation
                                         (AsA joe
                                             (IWantTo "change the color of the button to blue")
@@ -180,9 +180,9 @@ dom =
     , named = Named "Dominic Serrano"
     , future = Pipeline []
     , history = fourteenPointAvgPointsPerSprint
-    , skillSet =
+    , prowess =
         Prowess <|
-            Skills.new
+            Magic.new
                 [ oop
                 , php
                 ]
@@ -196,9 +196,9 @@ austin =
     , named = Named "Austin Erlandson"
     , future = Pipeline [ Summons (Quest []) (Fellowship []) ]
     , history = fifteenPointsPerSprintHistory
-    , skillSet =
+    , prowess =
         Prowess <|
-            Skills.new
+            Magic.new
                 [ ruby
                 , php
                 , oop
