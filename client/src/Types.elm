@@ -19,7 +19,6 @@ module Types exposing
     , castSpell
     ,  estimateIn
        -- Private Functions used by estimate
-       -- , assess
        -- , speed
 
     , velocity
@@ -82,7 +81,7 @@ velocity s =
                     List.length dds
             in
             -- Weighting
-            ( sum ((\(Deed fib _) -> fib) >> assess) dds * countOfDeeds
+            ( sum ((\(Deed prediction _) -> prediction) >> Prediction.assess) dds * countOfDeeds
             , countOfDeeds
             )
 
@@ -109,7 +108,7 @@ estimateIn : Time -> Summons -> Scope
 estimateIn time (Summons (Quest incantations) (Fellowship f)) =
     let
         cost =
-            sum (.effort >> (\(GuessOf prediction _) -> prediction) >> assess) incantations
+            sum (.effort >> (\(GuessOf prediction _) -> prediction) >> Prediction.assess) incantations
 
         hours =
             round <| (*) (toFloat cost / (toFloat <| sum velocity f)) (toFloat <| Journey.hours)
@@ -205,4 +204,4 @@ castSpell timestamp s { effort } =
 
 improve : Prowess -> Mastery -> Prowess
 improve (Prowess prowess) (MasterOf skills) =
-    Prowess <| Magic.merge prowess skills
+    Prowess <| Magic.learn prowess skills

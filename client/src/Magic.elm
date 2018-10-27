@@ -3,7 +3,7 @@ module Magic exposing
     , devOps
     , editCode
     , git
-    , merge
+    , learn
     , new
     , oop
     , php
@@ -22,8 +22,8 @@ new =
     List.foldl (\(Skill setA) (Skill setB) -> Skill <| Set.union setA setB) (Skill Set.empty)
 
 
-merge : Magic -> Magic -> Magic
-merge (Skill setA) (Skill setB) =
+learn : Magic -> Magic -> Magic
+learn (Skill setA) (Skill setB) =
     Skill <| Set.union setA setB
 
 
