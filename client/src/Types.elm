@@ -16,17 +16,16 @@ module Types exposing
     , Sourcerer
     , Summons(..)
     , Tale(..)
-    , Time(..)
     , castSpell
     ,  estimateIn
        -- Private Functions used by estimate
-       -- , defJourney
        -- , assess
        -- , speed
 
     , velocity
     )
 
+import Journey exposing (Time(..))
 import List.Extra as ListE
 import Magic exposing (Magic)
 import Prediction exposing (..)
@@ -48,25 +47,6 @@ type Quest
 
 type Scope
     = In Time Int
-
-
-type Time
-    = Weeks
-    | Days
-    | Hours
-
-
-defJourney : Time -> Int
-defJourney time =
-    case time of
-        Hours ->
-            80
-
-        Days ->
-            14
-
-        Weeks ->
-            2
 
 
 
@@ -111,7 +91,7 @@ velocity s =
             List.sortBy (\(Deed _ timestamp) -> Time.posixToMillis timestamp) deeds
                 |> ListE.groupWhile
                     (\(Deed _ timeA) (Deed _ timeB) ->
-                        TimE.diff Day utc timeA timeB <= defJourney Days
+                        TimE.diff Day utc timeA timeB <= Journey.days
                     )
                 |> List.map deedInfo
 
@@ -132,7 +112,7 @@ estimateIn time (Summons (Quest incantations) (Fellowship f)) =
             sum (.effort >> (\(GuessOf prediction _) -> prediction) >> assess) incantations
 
         hours =
-            round <| (*) (toFloat cost / (toFloat <| sum velocity f)) (toFloat <| defJourney Hours)
+            round <| (*) (toFloat cost / (toFloat <| sum velocity f)) (toFloat <| Journey.hours)
     in
     case time of
         Hours ->
