@@ -9,7 +9,6 @@ module Types exposing
     , Name(..)
     , Philosophy(..)
     , Pipeline(..)
-    , Prediction(..)
     , Prowess(..)
     , Quest(..)
     , Reason(..)
@@ -30,6 +29,7 @@ module Types exposing
 
 import List.Extra as ListE
 import Magic exposing (Magic)
+import Prediction exposing (..)
 import Time exposing (Posix, utc)
 import Time.Extra as TimE exposing (Interval(..))
 
@@ -170,37 +170,6 @@ type Reason
 
 type Philosophy
     = GuessOf Prediction Mastery
-
-
-type Prediction
-    = One
-    | Two
-    | Three
-    | Five
-    | Eight
-    | Thirteen
-
-
-assess : Prediction -> Int
-assess prediction =
-    case prediction of
-        One ->
-            1
-
-        Two ->
-            2
-
-        Three ->
-            3
-
-        Five ->
-            5
-
-        Eight ->
-            8
-
-        Thirteen ->
-            13
 
 
 type Pipeline
