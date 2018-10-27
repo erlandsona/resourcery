@@ -3,27 +3,26 @@ module Types exposing
     , Deed(..)
     , Description(..)
     , Fellowship(..)
-    , Fibonacci(..)
-    , History(..)
     , Idea(..)
     , Incantation
-    , Journey(..)
     , Mastery(..)
     , Name(..)
     , Philosophy(..)
     , Pipeline(..)
+    , Prediction(..)
     , Prowess(..)
     , Quest(..)
     , Reason(..)
     , Scope(..)
     , Sourcerer
     , Summons(..)
+    , Tale(..)
+    , Time(..)
     , castSpell
-    ,  estimate
+    ,  estimateIn
        -- Private Functions used by estimate
-       -- , costOf
        -- , defJourney
-       -- , fibonacci
+       -- , assess
        -- , speed
 
     , velocity
@@ -47,56 +46,31 @@ type Quest
     = Quest (List Incantation)
 
 
-
--- Not sure mixing billing and estimation here is ideal...
-
-
-type
-    Scope
-    -- | End Posix
-    -- | Monthly
-    = Hours Int
+type Scope
+    = In Time Int
 
 
-type Journey
-    = Days Int
+type Time
+    = Weeks
+    | Days
+    | Hours
 
 
-defJourney : Journey
-defJourney =
-    Days 14
+defJourney : Time -> Int
+defJourney time =
+    case time of
+        Hours ->
+            80
 
+        Days ->
+            14
 
-hoursWorkedPerTale : Float
-hoursWorkedPerTale =
-    80
-
-
-estimate : Summons -> Scope
-estimate (Summons (Quest incantations) (Fellowship f)) =
-    costOf incantations
-        |> (\(Hours cost) -> round <| (toFloat cost / toFloat (sum velocity f)) * hoursWorkedPerTale)
-        |> Hours
-
-
-costOf : List Incantation -> Scope
-costOf =
-    Hours << sum (.effort >> (\(GuessOf fib _) -> fib) >> fibonacci)
+        Weeks ->
+            2
 
 
 
 -- Like Miles Per Hour... but instead we use Points per Journey?
-
-
-sprInt : Int
-sprInt =
-    defJourney
-        |> (\(Days int) -> int)
-
-
-sumOfDeeds : List Deed -> Int
-sumOfDeeds =
-    sum <| (\(Deed fib _) -> fib) >> fibonacci
 
 
 sum : (a -> number) -> List a -> number
@@ -104,67 +78,75 @@ sum f =
     List.foldl (f >> (+)) 0
 
 
-type alias Tale =
-    { numOfDeeds : Float
-    , sumOfPoints : Float
-    }
+type Tale
+    = Past (List Deed)
 
 
-organize : List Deed -> List ( Deed, List Deed )
-organize =
-    List.sortBy (\(Deed _ timestamp) -> Time.posixToMillis timestamp)
-        >> ListE.groupWhile
-            (\(Deed _ timeA) (Deed _ timeB) ->
-                TimE.diff Day utc timeA timeB <= sprInt
-            )
 
-
-tale : ( Deed, List Deed ) -> Tale
-tale ( deed, deeds ) =
-    let
-        lst =
-            deed :: deeds
-
-        numOfDeeds =
-            List.length lst
-    in
-    { sumOfPoints = toFloat <| sumOfDeeds lst * numOfDeeds
-    , numOfDeeds = toFloat numOfDeeds
-    }
+-- Non-Empty List of Deeds represented with a Tuple
 
 
 velocity : Sourcerer -> Int
 velocity s =
     let
-        (Historical deeds) =
+        (Past deeds) =
             .history s
 
-        tales =
-            List.map tale (organize deeds)
+        deedInfo : ( Deed, List Deed ) -> ( Int, Int )
+        deedInfo ( d, ds ) =
+            let
+                dds =
+                    d :: ds
 
-        sumOfNumOfDeeds =
-            sum .numOfDeeds tales
+                countOfDeeds =
+                    List.length dds
+            in
+            -- Weighting
+            ( sum ((\(Deed fib _) -> fib) >> assess) dds * countOfDeeds
+            , countOfDeeds
+            )
 
-        sumOfAllPoints =
-            sum .sumOfPoints tales
+        inscribed : List ( Int, Int )
+        inscribed =
+            List.sortBy (\(Deed _ timestamp) -> Time.posixToMillis timestamp) deeds
+                |> ListE.groupWhile
+                    (\(Deed _ timeA) (Deed _ timeB) ->
+                        TimE.diff Day utc timeA timeB <= defJourney Days
+                    )
+                |> List.map deedInfo
 
-        -- numOfTales =
-        --     toFloat <| List.length groupedDeeds
+        sumOfAssessments =
+            toFloat <| sum Tuple.first inscribed
+
+        sumOfCountsOfDeeds =
+            toFloat <| sum Tuple.second inscribed
     in
-    round (sumOfAllPoints / sumOfNumOfDeeds)
+    -- I need round to be the behavior of Integer division not truncate.
+    round (sumOfAssessments / sumOfCountsOfDeeds)
 
 
+estimateIn : Time -> Summons -> Scope
+estimateIn time (Summons (Quest incantations) (Fellowship f)) =
+    let
+        cost =
+            sum (.effort >> (\(GuessOf prediction _) -> prediction) >> assess) incantations
 
--- Once and Incantation is performed it is known as a Deed : Incantation -> Deed
--- Something is missing in the connection of History, Deeds, Period / Velocity etc...
+        hours =
+            round <| (*) (toFloat cost / (toFloat <| sum velocity f)) (toFloat <| defJourney Hours)
+    in
+    case time of
+        Hours ->
+            In Hours hours
 
+        Days ->
+            In Days (round <| toFloat hours / 8)
 
-type History
-    = Historical (List Deed)
+        Weeks ->
+            In Weeks (round <| toFloat hours / 40)
 
 
 type Deed
-    = Deed Fibonacci Posix
+    = Deed Prediction Posix
 
 
 type alias Incantation =
@@ -187,10 +169,10 @@ type Reason
 
 
 type Philosophy
-    = GuessOf Fibonacci Mastery
+    = GuessOf Prediction Mastery
 
 
-type Fibonacci
+type Prediction
     = One
     | Two
     | Three
@@ -199,9 +181,9 @@ type Fibonacci
     | Thirteen
 
 
-fibonacci : Fibonacci -> Int
-fibonacci complexity =
-    case complexity of
+assess : Prediction -> Int
+assess prediction =
+    case prediction of
         One ->
             1
 
@@ -255,7 +237,7 @@ type alias Sourcerer =
 
     -- , summons : Summons -- head pipeline
     , future : Pipeline -- tail pipeline
-    , history : History -- List of Deeds / Incantations performed
+    , history : Tale -- List of Deeds / Incantations performed
     , prowess : Prowess -- Seed of Magic + prowess attained from philosophies learned by completing Incantations on Quests...
     }
 
@@ -267,7 +249,7 @@ castSpell timestamp s { effort } =
             effort
     in
     { s
-        | history = Historical (.history s |> (\(Historical deeds) -> Deed fib timestamp :: deeds))
+        | history = Past (.history s |> (\(Past deeds) -> Deed fib timestamp :: deeds))
         , prowess = improve (.prowess s) mastery
     }
 
