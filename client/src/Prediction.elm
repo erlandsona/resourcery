@@ -1,4 +1,7 @@
-module Prediction exposing (Prediction(..), assess)
+module Prediction exposing
+    ( Prediction(..)
+    , assess
+    )
 
 
 type Prediction

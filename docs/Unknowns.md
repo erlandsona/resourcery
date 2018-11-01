@@ -17,5 +17,26 @@ Chris:
 
         - New person starts a task they can give 13 point capacity
             but in three weeks they'll be on another project with 3 point capacity.
+                - They'll handle themselves.
 
-Need to nail down the scope of a Summons.
+        - New person starts a task they can give 13 point capacity
+            but in three weeks they'll be on another project with 3 point capacity.
+                - Points average over time regardless of what you're working on.
+
+NOTE:
+```
+module User ...
+type alias UserOptions = { ...}
+type alias UserId = String -- UUID
+-- Should be `type UserId = UserId String`
+type User = User { id: UserId, ...}
+type UserTable = UserTable { nextId: Int,  users: Dict User}
+
+addUser : UserOptions -> UserTable -> (UserId, UserTable)
+
+getUser: UserTable -> UserId -> User
+
+{uuid: UserInfo} -- Model
+(UserId) -- Set String / UUID's
+
+```

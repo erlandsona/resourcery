@@ -1,57 +1,57 @@
 module Magic exposing
-    ( Magic
-    , devOps
-    , editCode
-    , git
-    , learn
+    ( Id
+    , Info
+    , Mastery(..)
+    , Prowess(..)
+    , Table
     , new
-    , oop
-    , php
-    , ruby
     )
 
+import Dict exposing (Dict)
+import ID exposing (ID)
 import Set exposing (Set)
 
 
-type Magic
-    = Skill (Set String)
+type alias Id =
+    -- FIXME:
+    -- type Id = Id ID
+    ID
 
 
-new : List Magic -> Magic
-new =
-    List.foldl (\(Skill setA) (Skill setB) -> Skill <| Set.union setA setB) (Skill Set.empty)
+type alias Table =
+    -- FIXME:
+    -- type Magic
+    --     = Magic Id Info
+    Dict Id Info
 
 
-learn : Magic -> Magic -> Magic
-learn (Skill setA) (Skill setB) =
-    Skill <| Set.union setA setB
+type alias Info =
+    { spell : String
+    }
 
 
-ruby : Magic
-ruby =
-    Skill <| Set.singleton "ruby"
+new : Info -> Table -> ( Id, Table )
+new magic tbl =
+    let
+        { spell } =
+            magic
+
+        id =
+            ID.new spell
+
+        table =
+            Dict.insert id magic tbl
+    in
+    ( id, table )
 
 
-php : Magic
-php =
-    Skill <| Set.singleton "PHP"
+
+-- Sourcerers gain prowess from their Mastery of skills required to perform spells.
 
 
-oop : Magic
-oop =
-    Skill <| Set.singleton "Object Oriented Web Languages"
+type Prowess
+    = Skill (Set Id)
 
 
-devOps : Magic
-devOps =
-    Skill <| Set.singleton "DevOps"
-
-
-editCode : Magic
-editCode =
-    Skill <| Set.singleton "edit code"
-
-
-git : Magic
-git =
-    Skill <| Set.singleton "git"
+type Mastery
+    = MasterOf (Set Id)
