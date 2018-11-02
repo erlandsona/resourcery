@@ -1,7 +1,14 @@
-module Journey exposing (Time(..), days, hours)
+module Journey exposing (Caesura(..), Scope(..), days, hours)
+
+-- Caesura: noun. interruption
+-- Interval conflicts with Time.Extra
 
 
-type Time
+type Scope
+    = In Caesura Int
+
+
+type Caesura
     = Weeks
     | Days
     | Hours

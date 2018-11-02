@@ -12,7 +12,6 @@ module Types exposing
     , Prowess(..)
     , Quest(..)
     , Reason(..)
-    , Scope(..)
     , Sourcerer
     , Summons(..)
     , Tale(..)
@@ -24,7 +23,7 @@ module Types exposing
     , velocity
     )
 
-import Journey exposing (Time(..))
+import Journey exposing (Caesura(..), Scope(..))
 import List.Extra as ListE
 import Magic exposing (Magic)
 import Prediction exposing (..)
@@ -42,10 +41,6 @@ type Fellowship
 
 type Quest
     = Quest (List Incantation)
-
-
-type Scope
-    = In Time Int
 
 
 
@@ -104,8 +99,8 @@ velocity s =
     round (sumOfAssessments / sumOfCountsOfDeeds)
 
 
-estimateIn : Time -> Summons -> Scope
-estimateIn time (Summons (Quest incantations) (Fellowship f)) =
+estimateIn : Caesura -> Summons -> Scope
+estimateIn caesura (Summons (Quest incantations) (Fellowship f)) =
     let
         cost =
             sum (.effort >> (\(GuessOf prediction _) -> prediction) >> Prediction.assess) incantations
@@ -113,7 +108,7 @@ estimateIn time (Summons (Quest incantations) (Fellowship f)) =
         hours =
             round <| (*) (toFloat cost / (toFloat <| sum velocity f)) (toFloat <| Journey.hours)
     in
-    case time of
+    case caesura of
         Hours ->
             In Hours hours
 
