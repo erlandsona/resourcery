@@ -13,7 +13,7 @@ import Result.Extra as ResultE
 import Set exposing (Set)
 import Sourcerer
 import Summons
-import Types exposing (World)
+import World exposing (World)
 
 
 

@@ -1,4 +1,4 @@
-module Types exposing (World)
+module World exposing (World)
 
 import Incantation
 import Magic

@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "elm-live src/Main.elm --push-state --debug --open --before-build elm-test"
+    "start": "elm-live src/Main.elm --push-state --debug --open --before-build elm-test",
+    "test": "elm-test"
   },
   "repository": {
     "type": "git",

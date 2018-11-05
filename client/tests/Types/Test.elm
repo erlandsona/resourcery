@@ -1,4 +1,4 @@
-module TypesTest exposing (suite)
+module Types.Test exposing (suite)
 
 import Account exposing (Person(..))
 import Basics exposing (Float(..))
@@ -31,7 +31,7 @@ import Summons
 import Test exposing (..)
 import Time exposing (Month(..))
 import Time.Extra exposing (Parts)
-import Types exposing (World)
+import World exposing (World)
 
 
 suite : Test
