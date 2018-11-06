@@ -1,22 +1,23 @@
-module Main exposing (Model, Msg(..), init, main, myElement, myRowOfStuff, nothing, subscriptions, update, view)
+module Main exposing (main)
 
 import Browser exposing (Document)
 import Browser.Navigation exposing (Key)
-import Element exposing (Element, alignRight, centerY, el, fill, padding, rgb255, row, spacing, text, width)
+import Dict
+import Element exposing (..)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Html exposing (Html)
 import Html.Events exposing (onClick)
-import Types
 import Url exposing (Url)
+import World exposing (World)
 
 
 
 -- MAIN
 
 
-main : Program () Model Msg
+main : Program () World Msg
 main =
     Browser.application
         { init = init
@@ -28,29 +29,30 @@ main =
         }
 
 
-type alias Model =
-    Maybe String
-
-
-nothing : ( Model, Cmd Msg )
-nothing =
-    ( Nothing, Cmd.none )
-
-
 
 -- INIT
 
 
-init : flags -> Url -> Key -> ( Model, Cmd Msg )
+init : flags -> Url -> Key -> ( World, Cmd Msg )
 init flags url key =
-    nothing
+    let
+        world : World
+        world =
+            { incantations = Dict.empty
+            , magic = Dict.empty
+            , patrons = Dict.empty
+            , sourcerers = Dict.empty
+            , summons = Dict.empty
+            }
+    in
+    ( world, Cmd.none )
 
 
 
 -- VIEW
 
 
-view : Model -> Document Msg
+view : World -> Document Msg
 view _ =
     { title = "Resourcery"
     , body =
@@ -61,15 +63,26 @@ view _ =
 
 
 myRowOfStuff =
-    row [ width fill, centerY, spacing 30 ]
-        [ myElement
-        , myElement
-        , el [ alignRight ] myElement
+    column [ width fill ]
+        [ header
+        , body
         ]
 
 
-myElement : Element msg
-myElement =
+header =
+    row
+        [ Background.color (rgb255 0 0 0)
+        , Font.color (rgb255 255 255 255)
+        , width fill
+        , alignTop
+        , height (px 50)
+        ]
+        [ el [] (text "Resourcery")
+        ]
+
+
+body : Element msg
+body =
     el
         [ Background.color (rgb255 240 0 245)
         , Font.color (rgb255 255 255 255)
@@ -90,27 +103,27 @@ type Msg
     | Decrement
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> World -> ( World, Cmd Msg )
 update msg model =
     case msg of
         ClickedLink req ->
-            nothing
+            ( model, Cmd.none )
 
         ChangedUrl url ->
-            nothing
+            ( model, Cmd.none )
 
         Increment ->
-            nothing
+            ( model, Cmd.none )
 
         Decrement ->
-            nothing
+            ( model, Cmd.none )
 
 
 
 -- SUBSCRIPTIONS
 
 
-subscriptions : Model -> Sub Msg
+subscriptions : World -> Sub Msg
 subscriptions _ =
     Sub.batch
         [-- scroll ScrollBar
