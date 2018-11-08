@@ -7,7 +7,7 @@ module Incantation exposing
     , Quest
     , Reason(..)
     , Table
-    , new
+    , id
     )
 
 import Account exposing (Person(..))
@@ -54,12 +54,13 @@ type Philosophy
     = GuessOf Prediction Mastery
 
 
-new : Info -> Table -> ( Id, Table )
-new info tbl =
-    let
-        { idea, effort } =
-            info
+type alias Quest =
+    Set Id
 
+
+id : Info -> Id
+id { idea, effort } =
+    let
         (AsA person (IWantTo description) (SoThat reason)) =
             idea
 
@@ -70,15 +71,5 @@ new info tbl =
 
                 Magic sourcerer ->
                     sourcerer
-
-        id =
-            ID.new accountId ++ description ++ reason
-
-        table =
-            Dict.insert id info tbl
     in
-    ( id, table )
-
-
-type alias Quest =
-    Set Id
+    ID.new accountId ++ description ++ reason

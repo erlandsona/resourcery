@@ -1,16 +1,13 @@
 module Summons exposing
     ( Id
     , Info
-    ,  Table
-       -- , destroy
-
+    , Table
     , get
-    , new
+    , id
     )
 
 import Dict exposing (Dict)
 import Fellow
-import Helpers.String exposing (concat)
 import ID exposing (ID)
 import Incantation exposing (Quest)
 import Patron
@@ -39,36 +36,25 @@ type alias Info =
     }
 
 
-new : Info -> Table -> ( Id, Table )
-new info tbl =
-    let
-        key =
-            id info
-
-        table =
-            Dict.insert key info tbl
-    in
-    ( key, table )
-
-
 id : Info -> Id
 id { fellowship, patronId, quest } =
-    -- A reasonably uniquely identifiable string that will get hashed further to create the next id.
-    patronId
-        ++ concat quest
-        ++ concat fellowship
-        |> ID.new
+    let
+        key =
+            -- A reasonably uniquely identifiable
+            -- string that will get hashed further
+            -- to create the next id.
+            patronId
+                ++ Set.foldl (++) "" quest
+                ++ Set.foldl (++) "" fellowship
+    in
+    ID.new key
 
 
 get : Id -> Table -> Result String Info
-get key table =
-    let
-        maybe =
-            Dict.get key table
-    in
+get key =
     Result.fromMaybe
         ("Couldn't find Summons.Id: "
             ++ key
             ++ " in Summons.Table"
         )
-        maybe
+        << Dict.get key

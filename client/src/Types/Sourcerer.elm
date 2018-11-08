@@ -1,11 +1,11 @@
 module Sourcerer exposing
     ( Id
     , Info
-    , Table
-    , improve
-    ,  new
+    ,  Table
        -- , gen
 
+    , id
+    , improve
     , velocity
     )
 
@@ -85,25 +85,10 @@ velocity tale =
     round (sumOfAssessments / sumOfCountsOfDeeds)
 
 
-
--- WIP: gen : Info -> Generator Sourcerer
--- gen =
---     ID.gen |> Random.map Id
-
-
-new : Info -> Table -> ( Id, Table )
-new info tbl =
+id : Info -> Id
+id { name } =
     let
-        { name } =
-            info
-
         (Name str) =
             name
-
-        id =
-            ID.new str
-
-        table =
-            Dict.insert id info tbl
     in
-    ( id, table )
+    ID.new str

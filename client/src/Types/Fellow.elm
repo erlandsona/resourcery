@@ -3,7 +3,7 @@ module Fellow exposing
     , Info
     , Ship
     , Table
-    , new
+    , id
     )
 
 import Dict exposing (Dict)
@@ -43,20 +43,10 @@ type Blocked
     = Because String
 
 
-new : Info -> Table -> ( Id, Table )
-new info tbl =
-    let
-        { sourcererId } =
-            info
-
-        id =
-            ID.new sourcererId
-
-        table =
-            Dict.insert id info tbl
-    in
-    ( id, table )
-
-
 type alias Ship =
     Set Id
+
+
+id : Info -> Id
+id { sourcererId } =
+    ID.new sourcererId

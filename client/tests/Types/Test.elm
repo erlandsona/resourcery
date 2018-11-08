@@ -24,6 +24,7 @@ import Name exposing (..)
 import Patron
 import Prediction exposing (..)
 import Result.Extra as ResultE
+import Row
 import Set exposing (Set)
 import Sourcerer
 import Spell
@@ -240,14 +241,12 @@ joeId =
 
 joe : ( Patron.Id, Patron.Table )
 joe =
-    Patron.new { name = Name "Joe" } Dict.empty
+    Row.new Patron.id { name = Name "Joe" }
 
 
 dom : ( Sourcerer.Id, Sourcerer.Table )
 dom =
-    Sourcerer.new
-        domInfo
-        Dict.empty
+    Row.new Sourcerer.id domInfo
 
 
 domInfo : Sourcerer.Info
@@ -273,12 +272,11 @@ domsProwess =
 
 austin : ( Sourcerer.Id, Sourcerer.Table )
 austin =
-    Sourcerer.new
+    Row.new Sourcerer.id
         { name = Name "Austin Erlandson"
         , tale = fifteenPointsPerJourney
         , skills = austinsProwess magic
         }
-        Dict.empty
 
 
 austinsId : Sourcerer.Id
@@ -384,9 +382,7 @@ incantation1Info =
 
 incantation1 : ( Incantation.Id, Incantation.Table )
 incantation1 =
-    Incantation.new
-        incantation1Info
-        Dict.empty
+    Row.new Incantation.id incantation1Info
 
 
 incantation2Info : Incantation.Info
@@ -401,69 +397,62 @@ incantation2Info =
 
 incantation2 : ( Incantation.Id, Incantation.Table )
 incantation2 =
-    Incantation.new
-        incantation2Info
-        Dict.empty
+    Row.new Incantation.id incantation2Info
 
 
 incantation3 : ( Incantation.Id, Incantation.Table )
 incantation3 =
-    Incantation.new
+    Row.new Incantation.id
         { idea =
             AsA patron1
                 (IWantTo "update the color of the button")
                 (SoThat "it is consistent with the theme")
         , effort = GuessOf Two gitAndCodeMastery
         }
-        Dict.empty
 
 
 incantation4 : ( Incantation.Id, Incantation.Table )
 incantation4 =
-    Incantation.new
+    Row.new Incantation.id
         { idea =
             AsA patron1
                 (IWantTo "implement search")
                 (SoThat "I can find what I'm looking for.")
         , effort = GuessOf Thirteen gitAndCodeMastery
         }
-        Dict.empty
 
 
 incantation5 : ( Incantation.Id, Incantation.Table )
 incantation5 =
-    Incantation.new
+    Row.new Incantation.id
         { idea =
             AsA patron1
                 (IWantTo "deploy my app")
                 (SoThat "I can see it somewhere")
         , effort = GuessOf Thirteen gitAndCodeMastery
         }
-        Dict.empty
 
 
 incantation6 : ( Incantation.Id, Incantation.Table )
 incantation6 =
-    Incantation.new
+    Row.new Incantation.id
         { idea =
             AsA patron1
                 (IWantTo "Integrate with 3rd Party Oauth client")
                 (SoThat "users can connect their profiles")
         , effort = GuessOf Thirteen gitAndCodeMastery
         }
-        Dict.empty
 
 
 incantation7 : ( Incantation.Id, Incantation.Table )
 incantation7 =
-    Incantation.new
+    Row.new Incantation.id
         { idea =
             AsA patron1
                 (IWantTo "change the color of the button to blue")
                 (SoThat "it is consistent with the site theme.")
         , effort = GuessOf One gitAndCodeMastery
         }
-        Dict.empty
 
 
 patrons : Patron.Table
@@ -492,12 +481,11 @@ fiftyPointSummons =
 
 fiftyPointSummonsPair : ( Summons.Id, Summons.Table )
 fiftyPointSummonsPair =
-    Summons.new
+    Row.new Summons.id
         { quest = fiftyPointQuest
         , fellowship = fellowship1
         , patronId = joeId
         }
-        Dict.empty
 
 
 fiftyPointSummonsTwoFellowsId : Summons.Id
@@ -512,12 +500,11 @@ fiftyPointSummonsTwoFellows =
 
 fiftyPointSummonsTwoFellowsPair : ( Summons.Id, Summons.Table )
 fiftyPointSummonsTwoFellowsPair =
-    Summons.new
+    Row.new Summons.id
         { quest = fiftyPointQuest
         , fellowship = fellowship2
         , patronId = joeId
         }
-        Dict.empty
 
 
 emptySummons : Summons.Table
@@ -532,12 +519,11 @@ shortSummonsNoFellows =
 
 shortSummonsNoFellowsPair : ( Summons.Id, Summons.Table )
 shortSummonsNoFellowsPair =
-    Summons.new
+    Row.new Summons.id
         { quest = quest1
         , fellowship = emptyFellowship
         , patronId = joeId
         }
-        Dict.empty
 
 
 shortSummonsNoFellowsId : Summons.Id
@@ -552,12 +538,11 @@ summonsNoQuestOneFellow =
 
 summonsNoQuestOneFellowPair : ( Summons.Id, Summons.Table )
 summonsNoQuestOneFellowPair =
-    Summons.new
+    Row.new Summons.id
         { quest = emptyQuest
         , fellowship = fellowship1
         , patronId = joeId
         }
-        Dict.empty
 
 
 summonsNoQuestOneFellowId : Summons.Id
@@ -567,12 +552,11 @@ summonsNoQuestOneFellowId =
 
 firstSummons : ( Summons.Id, Summons.Table )
 firstSummons =
-    Summons.new
+    Row.new Summons.id
         { quest = quest1
         , fellowship = fellowship1
         , patronId = joeId
         }
-        Dict.empty
 
 
 quest1 : Quest
@@ -617,12 +601,11 @@ firstSummonsId =
 
 secondSummons : ( Summons.Id, Summons.Table )
 secondSummons =
-    Summons.new
+    Row.new Summons.id
         { quest = quest2
         , fellowship = fellowship2
         , patronId = joeId
         }
-        Dict.empty
 
 
 secondSummonsId : Summons.Id
@@ -658,32 +641,32 @@ magic =
 
 ruby : ( Magic.Id, Magic.Table )
 ruby =
-    Magic.new { spell = "ruby" } Dict.empty
+    Row.new Magic.id { spell = "ruby" }
 
 
 php : ( Magic.Id, Magic.Table )
 php =
-    Magic.new { spell = "PHP" } Dict.empty
+    Row.new Magic.id { spell = "PHP" }
 
 
 oop : ( Magic.Id, Magic.Table )
 oop =
-    Magic.new { spell = "Object Oriented Web Languages" } Dict.empty
+    Row.new Magic.id { spell = "Object Oriented Web Languages" }
 
 
 devOps : ( Magic.Id, Magic.Table )
 devOps =
-    Magic.new { spell = "DevOps" } Dict.empty
+    Row.new Magic.id { spell = "DevOps" }
 
 
 editCode : ( Magic.Id, Magic.Table )
 editCode =
-    Magic.new { spell = "edit code" } Dict.empty
+    Row.new Magic.id { spell = "edit code" }
 
 
 git : ( Magic.Id, Magic.Table )
 git =
-    Magic.new { spell = "git" } Dict.empty
+    Row.new Magic.id { spell = "git" }
 
 
 

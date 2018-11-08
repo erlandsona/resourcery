@@ -2,7 +2,7 @@ module Patron exposing
     ( Id
     , Info
     , Table
-    , new
+    , id
     )
 
 import Dict exposing (Dict)
@@ -34,19 +34,10 @@ type alias Info =
     }
 
 
-new : Info -> Table -> ( Id, Table )
-new info tbl =
+id : Info -> Id
+id { name } =
     let
-        { name } =
-            info
-
         (Name str) =
             name
-
-        id =
-            ID.new str
-
-        table =
-            Dict.insert id info tbl
     in
-    ( id, table )
+    ID.new str

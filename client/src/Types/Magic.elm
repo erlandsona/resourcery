@@ -4,7 +4,7 @@ module Magic exposing
     , Mastery(..)
     , Prowess(..)
     , Table
-    , new
+    , id
     )
 
 import Dict exposing (Dict)
@@ -30,21 +30,6 @@ type alias Info =
     }
 
 
-new : Info -> Table -> ( Id, Table )
-new magic tbl =
-    let
-        { spell } =
-            magic
-
-        id =
-            ID.new spell
-
-        table =
-            Dict.insert id magic tbl
-    in
-    ( id, table )
-
-
 
 -- Sourcerers gain prowess from their Mastery of skills required to perform spells.
 
@@ -55,3 +40,8 @@ type Prowess
 
 type Mastery
     = MasterOf (Set Id)
+
+
+id : Info -> Id
+id { spell } =
+    ID.new spell
